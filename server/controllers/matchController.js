@@ -156,9 +156,12 @@ async function savePlayingXI(req, res, next) {
     if (umpires) match.umpires = umpires;
     if (matchRefree) match.matchRefree = matchRefree;
 
-    // Save playing XI
+    // Save playing XI. State values are lowercase across the modern stack
+    // ("live" / "completed" / "upcoming") — the old capital "Live" made
+    // matches invisible to every live query until the first ball was
+    // bowled. Never resurrect a completed match by re-saving its XI.
     match.playingXI = playingXI;
-    match.matchState = "Live";
+    if (match.matchState !== "completed") match.matchState = "live";
     await match.save();
 
     //also create inning for this match
