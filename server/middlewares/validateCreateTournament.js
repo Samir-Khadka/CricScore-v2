@@ -21,8 +21,13 @@ function validateTournament(req, res, next) {
       .json({ message: "Start date cannot be after end date" });
   }
 
-  //if start date is already past
-  if (new Date(start_date) < new Date()) {
+  //if start date is already past (compare by calendar day, so a
+  //tournament starting today is allowed)
+  const startDay = new Date(start_date);
+  startDay.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (startDay < today) {
     return res
       .status(422)
       .json({ message: "Start date cannot be in the past" });
