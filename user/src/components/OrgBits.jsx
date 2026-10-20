@@ -1,5 +1,20 @@
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import LiveDot from "./LiveDot";
+import { ROLE_META, normalizeRole } from "../lib/organizer";
+
+/** Small role chip (BAT / BOWL / AR / WK), colour-coded per role. */
+export function RoleChip({ role }) {
+  const r = normalizeRole(role);
+  const meta = ROLE_META[r];
+  return (
+    <span
+      title={r}
+      className={`shrink-0 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md ${meta.chip}`}
+    >
+      {meta.short}
+    </span>
+  );
+}
 
 /** Match state chip — same language as the scorer match list. */
 export function StateChip({ state }) {

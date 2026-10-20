@@ -8,7 +8,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { ErrorBox, Spinner } from "../components/States";
-import { FormError, SectionHead } from "../components/OrgBits";
+import { FormError, RoleChip, SectionHead } from "../components/OrgBits";
 import { api, getScorerId, unwrap } from "../lib/api";
 import { ghostBtnCls, primaryBtnCls } from "../lib/formStyles";
 import { fetchSquad, matchHasXI } from "../lib/organizer";
@@ -17,7 +17,7 @@ const idOf = (v) => (v && typeof v === "object" ? String(v._id) : String(v));
 
 /* ------------------------------ team picker ------------------------------- */
 
-function TeamPicker({ teamName, names, pick, onToggle, onCaptain }) {
+function TeamPicker({ teamName, players, pick, onToggle, onCaptain }) {
   const { selected, captain } = pick;
   const full = selected.length >= 11;
   return (
@@ -38,7 +38,8 @@ function TeamPicker({ teamName, names, pick, onToggle, onCaptain }) {
         Tick 11 players, then mark one as captain (C).
       </p>
       <div className="mt-3 divide-y divide-[var(--color-card-border)]">
-        {names.map((name) => {
+        {players.map((p) => {
+          const name = p.name;
           const isSel = selected.includes(name);
           const isCap = captain === name;
           return (
@@ -65,15 +66,14 @@ function TeamPicker({ teamName, names, pick, onToggle, onCaptain }) {
                 className="h-5 w-5 shrink-0 accent-[#10b981] pointer-events-none"
               />
               <span
-                className={`flex-1 font-semibold ${
+                className={`flex-1 font-semibold flex items-center gap-2 min-w-0 ${
                   isSel ? "text-heading" : "text-subheading"
                 }`}
               >
-                {name}
+                <span className="truncate">{name}</span>
+                <RoleChip role={p.role} />
                 {isCap && (
-                  <span className="ml-2 text-xs font-bold text-[#10b981]">
-                    (C)
-                  </span>
+                  <span className="text-xs font-bold text-[#10b981]">(C)</span>
                 )}
               </span>
               {isSel && (
@@ -108,7 +108,7 @@ const MatchSetup = () => {
   const scorerId = getScorerId();
 
   const [match, setMatch] = useState(null);
-  const [squads, setSquads] = useState({}); // teamId -> names[]
+  const [squads, setSquads] = useState({}); // teamId -> [{name, role, isCaptain}]
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -156,7 +156,13 @@ const MatchSetup = () => {
           fetchSquad(tournamentId, aId),
           fetchSquad(tournamentId, bId),
         ]);
-        setSquads({ [aId]: sqA.names, [bId]: sqB.names });
+        setSquads({ [aId]: sqA.players, [bId]: sqB.players });
+        // Preselect each squad's saved captain as the XI captain.
+        const initPick = (players) => {
+          const cap = players.find((p) => p.isCaptain);
+          return { selected: [], captain: cap ? cap.name : null };
+        };
+        setPicks({ [aId]: initPick(sqA.players), [bId]: initPick(sqB.players) });
         setTossWinner((prev) => prev || aId);
       } catch (err) {
         if (err?.name === "AbortError") return;
@@ -208,8 +214,14 @@ const MatchSetup = () => {
 
   const squadShort =
     match && (squadA.length < 11 || squadB.length < 11);
-  const validA = pickA.selected.length === 11 && !!pickA.captain;
-  const validB = pickB.selected.length === 11 && !!pickB.captain;
+  const validA =
+    pickA.selected.length === 11 &&
+    !!pickA.captain &&
+    pickA.selected.includes(pickA.captain);
+  const validB =
+    pickB.selected.length === 11 &&
+    !!pickB.captain &&
+    pickB.selected.includes(pickB.captain);
   const canSave = validA && validB && !busy;
 
   const save = async () => {
@@ -339,14 +351,14 @@ const MatchSetup = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-5">
             <TeamPicker
               teamName={match.teamA}
-              names={squadA}
+              players={squadA}
               pick={pickA}
               onToggle={(name) => togglePlayer(teamAId, name)}
               onCaptain={(name) => setCaptain(teamAId, name)}
             />
             <TeamPicker
               teamName={match.teamB}
-              names={squadB}
+              players={squadB}
               pick={pickB}
               onToggle={(name) => togglePlayer(teamBId, name)}
               onCaptain={(name) => setCaptain(teamBId, name)}
@@ -415,11 +427,19 @@ const MatchSetup = () => {
             <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm font-semibold text-subheading">
               <span className={validA ? "text-emerald-500" : ""}>
                 {match.teamA}: {pickA.selected.length}/11
-                {pickA.captain ? ` · Captain: ${pickA.captain}` : " · no captain"}
+                {pickA.captain && pickA.selected.includes(pickA.captain)
+                  ? ` · Captain: ${pickA.captain}`
+                  : pickA.captain
+                    ? " · captain not in XI"
+                    : " · no captain"}
               </span>
               <span className={validB ? "text-emerald-500" : ""}>
                 {match.teamB}: {pickB.selected.length}/11
-                {pickB.captain ? ` · Captain: ${pickB.captain}` : " · no captain"}
+                {pickB.captain && pickB.selected.includes(pickB.captain)
+                  ? ` · Captain: ${pickB.captain}`
+                  : pickB.captain
+                    ? " · captain not in XI"
+                    : " · no captain"}
               </span>
             </div>
             <div className="mt-3 space-y-3">

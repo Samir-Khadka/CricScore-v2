@@ -222,9 +222,19 @@ const ScorerConsole = () => {
     if (!cur || cur.notStarted || !view) return;
     const battingIds = new Set(battingSquad.map((p) => String(p._id)));
     const fieldingIds = new Set(fieldingSquad.map((p) => String(p._id)));
+    // A dismissed batsman can never be at the crease. Without this, the
+    // pick() fallback below resurrects the out player (he is still in
+    // the squad list) and the new-batsman picker never opens.
+    const outIds = new Set(
+      (cur.state?.batsmen || [])
+        .filter((b) => b.status === "out")
+        .map((b) => String(b.id ?? b.batsmanId))
+    );
     const pick = (engineId, prev) => {
+      if (engineId && outIds.has(String(engineId))) engineId = null;
       if (engineId && battingIds.size === 0) return String(engineId);
       if (engineId && battingIds.has(String(engineId))) return String(engineId);
+      if (prev && outIds.has(prev)) return null;
       if (prev && (battingIds.size === 0 || battingIds.has(prev))) return prev;
       return engineId ? String(engineId) : null;
     };

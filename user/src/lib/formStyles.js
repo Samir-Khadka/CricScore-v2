@@ -9,6 +9,10 @@ export const selectCls = `${inputCls} cursor-pointer`;
 
 export const textareaCls = `${inputCls} py-3 leading-relaxed`;
 
+/** Compact input for squad-sheet rows (denser than the page forms). */
+export const rowInputCls =
+  "w-full min-h-11 px-3 rounded-lg border-2 border-secondary bg-secondary/30 text-heading placeholder:text-secondary outline-none focus:border-[#10b981] font-semibold";
+
 export const labelCls = "block text-sm font-semibold text-subheading mb-1.5";
 
 export const primaryBtnCls =
