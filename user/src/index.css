@@ -4,32 +4,59 @@
    ColorMode context toggles, not from the OS media query. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-body {
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    background-color: var(--color-body);
-    color: var(--color-heading)
-}
+/* ------------------------------------------------------------------ */
+/* CricScore design system — dark-first premium sports theme.          */
+/* Deep zinc/slate surfaces, one vivid emerald accent (lime highlight) */
+/* ------------------------------------------------------------------ */
 
 :root {
-    --color-body: #f8fafc;
+    --color-body: #f3f5f7;
     --color-card: #ffffff;
-    --color-secondary-bg: #f1f5f9;
-    --color-border-secondary: #c8cbce;
-    --color-heading: #0f172a;
-    --color-subheading: #475569;
-    --color-secondary: #64748b;
-    --color-card-border: #e2e8f0;
+    --color-secondary-bg: #e8edf3;
+    --color-border-secondary: #d7dee8;
+    --color-heading: #0a1120;
+    --color-subheading: #4b5a70;
+    --color-secondary: #8494ab;
+    --color-card-border: rgba(10, 17, 32, 0.09);
+    --color-accent: #059669;
 }
 
 .dark {
-    --color-body: #0d0e12;
-    --color-card: #1c1f25;
-    --color-secondary-bg: #1e293b;
-    --color-border-secondary: #1e293b;
-    --color-heading: #e5e7eb;
-    --color-subheading: #94a3b8;
-    --color-secondary: #64748b;
-    --color-card-border: rgba(147, 51, 234, 0.3);
+    --color-body: #07090c;
+    --color-card: #10141b;
+    --color-secondary-bg: #171d28;
+    --color-border-secondary: #232c3d;
+    --color-heading: #eef2f7;
+    --color-subheading: #9aa9bf;
+    --color-secondary: #66788f;
+    --color-card-border: rgba(255, 255, 255, 0.08);
+    --color-accent: #10b981;
+}
+
+body {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--color-body);
+    color: var(--color-heading);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+::selection {
+    background: rgba(16, 185, 129, 0.35);
+}
+
+/* Slim, theme-aware scrollbars for panels and the Manhattan strip. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-secondary) transparent;
+}
+*::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+    background: var(--color-border-secondary);
+    border-radius: 999px;
 }
 
 .heading-gradient {
@@ -38,12 +65,65 @@ body {
 }
 
 .dark .heading-gradient {
-    background-image: linear-gradient(90deg, #cc66ff 0%, #00dbde 100%);
+    background-image: linear-gradient(92deg, #34d399 0%, #a3e635 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    text-shadow: 0 0 18px rgba(204, 102, 255, 0.18);
+    text-shadow: 0 0 22px rgba(52, 211, 153, 0.16);
+}
+
+/* ---------------------------- motion ------------------------------- */
+
+@keyframes score-pop {
+    0% {
+        transform: scale(1);
+    }
+    35% {
+        transform: scale(1.16);
+        color: var(--color-accent);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes grow-y {
+    from {
+        transform: scaleY(0);
+    }
+    to {
+        transform: scaleY(1);
+    }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(26px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes shimmer {
+    from {
+        background-position: 200% 0;
+    }
+    to {
+        background-position: -200% 0;
+    }
 }
 
 @layer utilities {
@@ -80,10 +160,66 @@ body {
     }
 
     .card-border {
-        border-color: var(--color-card-border)
+        border-color: var(--color-card-border);
     }
 
     .border-secondary {
-        border-color: var(--color-border-secondary)
+        border-color: var(--color-border-secondary);
+    }
+
+    /* Standard content card: soft ring border + layered soft shadow. */
+    .surface-card {
+        background-color: var(--color-card);
+        border: 1px solid var(--color-card-border);
+        border-radius: 1rem;
+        box-shadow:
+            0 1px 2px rgba(2, 6, 23, 0.05),
+            0 12px 32px -20px rgba(2, 6, 23, 0.28);
+    }
+
+    .dark .surface-card {
+        box-shadow:
+            0 1px 2px rgba(0, 0, 0, 0.55),
+            0 18px 44px -22px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Translucent, blurred surface for sticky chrome (nav, score bar). */
+    .glass {
+        background-color: color-mix(in srgb, var(--color-card) 76%, transparent);
+        -webkit-backdrop-filter: blur(16px) saturate(1.5);
+        backdrop-filter: blur(16px) saturate(1.5);
+    }
+
+    /* Score figures pop once when they change (remount via key={value}). */
+    .animate-score-pop {
+        animation: score-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Bottom sheets / modals rise into place. */
+    .animate-slide-up {
+        animation: slide-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .animate-fade-in {
+        animation: fade-in 0.25s ease both;
+    }
+
+    /* Manhattan bars grow from the baseline. */
+    .manhattan-bar {
+        transform-box: fill-box;
+        transform-origin: 50% 100%;
+        animation: grow-y 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* Skeleton shimmer sweep (on top of animate-pulse). */
+    .shimmer {
+        background-image: linear-gradient(
+            100deg,
+            transparent 30%,
+            rgba(148, 163, 184, 0.18) 50%,
+            transparent 70%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.6s linear infinite;
     }
 }

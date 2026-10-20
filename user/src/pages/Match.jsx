@@ -7,13 +7,19 @@ import {
   List,
   MessageCircle,
   Trophy,
+  Users,
   Zap,
 } from "lucide-react";
 import TimelineItem from "../components/TimelineItem";
 import Commentary from "../components/Commentary";
+import TeamChip from "../components/TeamChip";
+import LiveDot from "../components/LiveDot";
 import PlayerScoreCard from "../components/PlayerScoreCard";
 import Scorecard from "../components/Scorecard";
 import MatchDetails from "../components/MatchDetails";
+import WinMeter from "../components/WinMeter";
+import WormChart from "../components/WormChart";
+import Partnerships from "../components/Partnerships";
 import { ErrorBox, Spinner } from "../components/States";
 import { api, matchSocket, unwrap } from "../lib/api";
 import {
@@ -23,7 +29,23 @@ import {
   fmt2,
   inningsView,
   matchFormat,
+  teamColorHex,
 } from "../lib/cricket";
+
+const MILESTONE_ICONS = {
+  team: {
+    Icon: Trophy,
+    cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  },
+  batsman: {
+    Icon: Award,
+    cls: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
+  },
+  partnership: {
+    Icon: Users,
+    cls: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+  },
+};
 
 const TABS = [
   { id: "com", label: "Commentary", icon: MessageCircle },
@@ -63,8 +85,10 @@ function Manhattan({ overs }) {
                 width={barW}
                 height={h}
                 rx={4}
-                fill={o.wickets > 0 ? "#e11d48" : "url(#manhattanGrad)"}
-                opacity={o.wickets > 0 ? 0.85 : 1}
+                fill={o.wickets > 0 ? "#f43f5e" : "url(#manhattanGrad)"}
+                opacity={o.wickets > 0 ? 0.92 : 1}
+                className="manhattan-bar"
+                style={{ animationDelay: `${i * 45}ms` }}
               />
               <text
                 x={x + barW / 2}
@@ -73,7 +97,7 @@ function Manhattan({ overs }) {
                 fontSize="12"
                 fontWeight="700"
                 fill="currentColor"
-                className="fill-[#cc66ff]"
+                className="fill-emerald-500 tabular-nums"
               >
                 {o.runs}
                 {o.wickets > 0 ? `/${o.wickets}w` : ""}
@@ -93,8 +117,8 @@ function Manhattan({ overs }) {
         })}
         <defs>
           <linearGradient id="manhattanGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#cc66ff" />
-            <stop offset="100%" stopColor="#00dbde" />
+            <stop offset="0%" stopColor="#a3e635" />
+            <stop offset="100%" stopColor="#059669" />
           </linearGradient>
         </defs>
       </svg>
@@ -228,6 +252,59 @@ const Match = () => {
       }
     : null;
 
+  // Win probability for team A (0–100) for the meter: while live it comes
+  // from the current innings' engine state (only chases carry one); for a
+  // completed match it settles at 100/0 from the recorded winner.
+  const winMeter = useMemo(() => {
+    if (!match || inningsList.length === 0) return null;
+    const idx = isLive ? activeIdx : inningsList.length - 1;
+    const d = inningsList[idx];
+    if (!d) return null;
+    const wp = d.state?.winProbability;
+    const battingIsA =
+      String(d.inning?.batting_team) === String(match.teamA_id);
+    let aPct = null;
+    if (isCompleted && match.winner) {
+      aPct = String(match.winner) === String(match.teamA_id) ? 100 : 0;
+    } else if (wp) {
+      aPct = battingIsA ? wp.batting : wp.bowling;
+    }
+    if (aPct === null || aPct === undefined) return null;
+    return { aPct };
+  }, [match, inningsList, activeIdx, isLive, isCompleted]);
+
+  // Worm graph series: cumulative runs after each over, per innings.
+  const wormSeries = useMemo(() => {
+    const out = [];
+    inningsList.forEach((d, i) => {
+      const v = views[i];
+      if (!v?.overs?.length) return;
+      const name =
+        String(d?.inning?.batting_team) === String(match?.teamA_id)
+          ? match?.teamA
+          : match?.teamB;
+      let cum = 0;
+      const points = [{ over: 0, runs: 0, overWickets: 0 }];
+      for (const o of v.overs) {
+        cum += o.runs;
+        points.push({ over: o.over, runs: cum, overWickets: o.wickets || 0 });
+      }
+      out.push({
+        name,
+        color: teamColorHex(name),
+        points,
+        finalRuns: cum,
+        finalWickets: v.wickets,
+      });
+    });
+    return out;
+  }, [inningsList, views, match]);
+
+  const selectedMilestones = useMemo(
+    () => selected?.milestones || [],
+    [selected]
+  );
+
   const selectedEvents = useMemo(
     () => selected?.events || [],
     [selected]
@@ -240,6 +317,42 @@ const Match = () => {
         .reverse(),
     [selectedEvents, labels]
   );
+
+  // Group the (newest-first) commentary rows under per-over separators,
+  // with the over's run/wicket tally computed from the ball log.
+  const commentaryGroups = useMemo(() => {
+    const ballTotal = (ev) => {
+      const ex = ev?.extras || {};
+      return (
+        (ev?.batRuns || 0) +
+        (ex.wide || 0) +
+        (ex.noBall || 0) +
+        (ex.bye || 0) +
+        (ex.legBye || 0) +
+        (ex.penalty || 0)
+      );
+    };
+    const groups = [];
+    for (const row of commentaryRows) {
+      const overIdx = String(row.label).split(".")[0];
+      const isWicket =
+        row.ev?.wicket?.type && row.ev.wicket.type !== "retired_hurt";
+      const last = groups[groups.length - 1];
+      if (last && last.overIdx === overIdx) {
+        last.rows.push(row);
+        last.runs += ballTotal(row.ev);
+        if (isWicket) last.wickets += 1;
+      } else {
+        groups.push({
+          overIdx,
+          rows: [row],
+          runs: ballTotal(row.ev),
+          wickets: isWicket ? 1 : 0,
+        });
+      }
+    }
+    return groups;
+  }, [commentaryRows]);
 
   if (loading && !detail) {
     return (
@@ -261,9 +374,14 @@ const Match = () => {
     view ? (
       <>
         <p className="font-bold font-space text-4xl text-heading mt-3 md:mt-0">
-          {view.runs}/{view.wickets}
+          <span
+            key={`${view.runs}/${view.wickets}`}
+            className="inline-block animate-score-pop tabular-nums"
+          >
+            {view.runs}/{view.wickets}
+          </span>
         </p>
-        <p className="text-subheading text-xs text-center font-semibold font-inter mt-2">
+        <p className="text-subheading text-xs text-center font-semibold font-inter mt-2 tabular-nums">
           ({view.oversText}
           {format ? `/${format}` : ""} ov)
         </p>
@@ -274,8 +392,9 @@ const Match = () => {
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center mt-6 md:mt-10 px-2">
-      {/* live scorecard header */}
-      <div className="w-full max-w-5xl p-4 rounded-xl border-2 border-[#cc66ff]/50 bg-card shadow-md">
+      {/* live scorecard header — sticks under the navbar while scrolling */}
+      <div className="sticky top-16 z-30 w-full max-w-5xl">
+        <div className="glass surface-card p-4 shadow-xl">
         <div className="flex flex-row justify-between flex-wrap gap-2">
           <div
             className={`${
@@ -283,9 +402,7 @@ const Match = () => {
             } font-bold px-2 rounded-xl flex flex-row items-center gap-2 uppercase text-sm`}
             aria-live="polite"
           >
-            {isLive && (
-              <span className="w-[10px] h-[10px] bg-rose-500 rounded-2xl animate-pulse" />
-            )}
+            {isLive && <LiveDot />}
             {match?.matchState}
             {isLive && !connected && (
               <span className="text-amber-500 normal-case font-semibold text-xs">
@@ -301,9 +418,12 @@ const Match = () => {
         {/* scores */}
         <div className="flex flex-col md:flex-row justify-evenly items-center flex-wrap py-4">
           <div className="flex flex-col md:flex-row items-center md:gap-16">
-            <p className="text-heading font-bold text-2xl md:text-3xl">
-              {match?.teamA}
-            </p>
+            <div className="flex items-center gap-3">
+              <TeamChip name={match?.teamA} size="lg" />
+              <p className="text-heading font-bold text-2xl md:text-3xl">
+                {match?.teamA}
+              </p>
+            </div>
             <div className="text-center">{teamScore(teamAView)}</div>
           </div>
 
@@ -313,16 +433,50 @@ const Match = () => {
 
           <div className="flex flex-col md:flex-row items-center md:gap-16">
             <div className="text-center">{teamScore(teamBView)}</div>
-            <p className="text-heading font-bold text-2xl md:text-3xl">
-              {match?.teamB}
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="text-heading font-bold text-2xl md:text-3xl">
+                {match?.teamB}
+              </p>
+              <TeamChip name={match?.teamB} size="lg" />
+            </div>
           </div>
         </div>
 
+        {/* this over strip (part of the sticky summary) */}
+        {isLive && activeView && activeView.thisOver.length > 0 && (
+          <div className="flex flex-row items-center flex-wrap justify-center mt-1 border-t card-border pt-3">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-secondary mr-1.5">
+              This over
+            </span>
+            {activeView.thisOver.map((s, i) => (
+              <TimelineItem key={i} result={s} />
+            ))}
+          </div>
+        )}
+
+        {/* win probability meter */}
+        {winMeter && (
+          <div className="mt-3 border-t card-border pt-3">
+            <WinMeter
+              teamA={match?.teamA}
+              teamB={match?.teamB}
+              teamAPct={winMeter.aPct}
+            />
+          </div>
+        )}
+        </div>
+      </div>
+
+      {/* result + live stats card (only when it has something to show) */}
+      {((isLive && activeView) ||
+        (isCompleted && match?.result) ||
+        match?.venue ||
+        match?.toss?.wonBy) && (
+      <div className="w-full max-w-5xl surface-card p-4 mt-4">
         {/* result banner */}
         {isCompleted && match?.result && (
           <div className="w-full flex justify-center mt-2">
-            <div className="text-heading bg-emerald-500/20 dark:text-emerald-400 font-medium text-lg rounded-lg p-3 text-center">
+            <div className="text-heading bg-emerald-500/15 ring-1 ring-emerald-500/25 dark:text-emerald-400 font-medium text-lg rounded-xl px-4 py-3 text-center">
               <Trophy className="inline" size={18} strokeWidth={2.5} /> &nbsp;
               <span>{match.result}</span>
             </div>
@@ -346,8 +500,8 @@ const Match = () => {
                 />
               ))}
 
-              <div className="bg-secondary p-3 md:w-[220px] rounded-lg">
-                <div className="flex flex-col gap-y-2 text-sm font-semibold text-heading text-center">
+              <div className="bg-secondary/60 ring-1 ring-black/5 dark:ring-white/10 p-3.5 md:w-[220px] rounded-xl">
+                <div className="flex flex-col gap-y-2 text-sm font-semibold text-heading text-center tabular-nums">
                   <p>
                     CRR:{" "}
                     <span className="font-space">{fmt2(activeView.crr)}</span>
@@ -414,17 +568,6 @@ const Match = () => {
               )}
             </div>
 
-            {/* this over strip */}
-            {activeView.thisOver.length > 0 && (
-              <div className="flex flex-row items-center flex-wrap justify-center">
-                <span className="text-sm font-semibold text-secondary mr-2">
-                  This over:
-                </span>
-                {activeView.thisOver.map((s, i) => (
-                  <TimelineItem key={i} result={s} />
-                ))}
-              </div>
-            )}
           </div>
         )}
 
@@ -440,12 +583,13 @@ const Match = () => {
           )}
         </div>
       </div>
+      )}
 
-      {/* tabs */}
+      {/* tabs — segmented control */}
       <div
         role="tablist"
         aria-label="Match sections"
-        className="w-full max-w-5xl bg-card mt-8 border-2 border-[#cc66ff]/50 flex flex-row justify-evenly items-center rounded-xl shadow-md overflow-x-auto"
+        className="w-full max-w-5xl bg-secondary/50 ring-1 ring-black/5 dark:ring-white/10 mt-8 flex flex-row gap-1 p-1.5 rounded-2xl overflow-x-auto"
       >
         {TABS.map((t) => {
           const Icon = t.icon;
@@ -456,8 +600,10 @@ const Match = () => {
               role="tab"
               aria-selected={active}
               onClick={() => setSelectedTab(t.id)}
-              className={`flex-1 min-w-[110px] p-3 text-center rounded-xl cursor-pointer flex items-center justify-center gap-2 ${
-                active ? "bg-[#af14fd] text-slate-100 font-semibold" : "text-heading"
+              className={`flex-1 min-w-[110px] px-3 py-2.5 text-center rounded-xl cursor-pointer flex items-center justify-center gap-2 text-sm transition-all duration-200 ${
+                active
+                  ? "bg-emerald-600 text-white font-semibold shadow-md shadow-emerald-600/30"
+                  : "text-subheading font-medium hover:text-heading hover:bg-card/70"
               }`}
             >
               <Icon size={16} />
@@ -479,10 +625,10 @@ const Match = () => {
               <button
                 key={d?.inning?._id || i}
                 onClick={() => setInnIdx(i)}
-                className={`px-4 py-2 rounded-xl font-semibold cursor-pointer border-2 ${
+                className={`px-4 py-2 rounded-full text-sm font-semibold cursor-pointer transition-all duration-200 ${
                   innIdx === i
-                    ? "text-[#cc66ff] border-[#cc66ff]/60"
-                    : "text-heading border-transparent"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/40"
+                    : "bg-card text-subheading ring-1 ring-black/5 dark:ring-white/10 hover:text-heading"
                 }`}
                 aria-pressed={innIdx === i}
               >
@@ -498,22 +644,70 @@ const Match = () => {
         {selectedTab === "com" ? (
           <div>
             <div className="text-2xl text-heading font-space font-semibold px-2">
-              <MessageCircle size={20} className="inline-block mr-2 text-cyan-300" />
+              <MessageCircle size={20} className="inline-block mr-2 text-emerald-500" />
               <span>Live Commentary</span>
             </div>
+            {selectedMilestones.length > 0 && (
+              <div className="surface-card px-4 py-2 mt-4">
+                <p className="px-1 pt-2 pb-1 text-[11px] font-black uppercase tracking-wider text-secondary">
+                  Milestones
+                </p>
+                <ul>
+                  {selectedMilestones.map((m, i) => {
+                    const meta =
+                      MILESTONE_ICONS[m.type] || MILESTONE_ICONS.team;
+                    const Icon = meta.Icon;
+                    return (
+                      <li
+                        key={`${m.label}-${i}`}
+                        className="flex items-center gap-3 px-1 py-2.5 border-b card-border last:border-b-0"
+                      >
+                        <span
+                          className={`h-8 w-8 rounded-full inline-flex items-center justify-center shrink-0 ${meta.cls}`}
+                        >
+                          <Icon size={15} />
+                        </span>
+                        <span className="text-sm font-medium text-heading flex-1 min-w-0">
+                          {m.label}
+                        </span>
+                        <span className="text-xs font-space font-semibold text-subheading tabular-nums shrink-0">
+                          at {m.runs} runs
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
             <div className="mt-4 max-h-[800px] overflow-y-auto p-2">
-              {commentaryRows.length === 0 ? (
+              {commentaryGroups.length === 0 ? (
                 <p className="text-subheading px-2">
                   No balls bowled in this innings yet.
                 </p>
               ) : (
-                commentaryRows.map(({ ev, label }, i) => (
-                  <Commentary
-                    key={ev._id || `${label}-${i}`}
-                    label={label}
-                    text={eventCommentary(ev)}
-                    symbol={ballSymbol(ev)}
-                  />
+                commentaryGroups.map((g) => (
+                  <div key={`over-${g.overIdx}`}>
+                    <div className="flex items-center gap-3 mt-6 mb-3 first:mt-1 px-1">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-500/25 rounded-full px-3 py-1 shrink-0">
+                        Over {Number(g.overIdx) + 1}
+                      </span>
+                      <span className="text-xs font-semibold text-subheading tabular-nums shrink-0">
+                        {g.runs} run{g.runs === 1 ? "" : "s"}
+                        {g.wickets > 0
+                          ? ` · ${g.wickets} wicket${g.wickets === 1 ? "" : "s"}`
+                          : ""}
+                      </span>
+                      <span className="flex-1 border-t card-border" />
+                    </div>
+                    {g.rows.map(({ ev, label }, i) => (
+                      <Commentary
+                        key={ev._id || `${label}-${i}`}
+                        label={label}
+                        text={eventCommentary(ev)}
+                        symbol={ballSymbol(ev)}
+                      />
+                    ))}
+                  </div>
                 ))
               )}
             </div>
@@ -521,7 +715,7 @@ const Match = () => {
         ) : selectedTab === "sc" ? (
           <div>
             <div className="text-2xl text-heading font-space font-semibold px-2">
-              <Clipboard size={20} className="inline-block mr-2 text-cyan-300" />
+              <Clipboard size={20} className="inline-block mr-2 text-emerald-500" />
               <span>Scorecard</span>
             </div>
             <div className="mt-4">
@@ -534,6 +728,11 @@ const Match = () => {
                 }
                 view={selectedView}
               />
+              {selectedView?.partnerships?.length > 0 && (
+                <div className="mt-6">
+                  <Partnerships partnerships={selectedView.partnerships} />
+                </div>
+              )}
               {inningsList.length > 0 &&
                 innIdx === 0 &&
                 inningsList.length === 1 && (
@@ -554,17 +753,32 @@ const Match = () => {
         ) : selectedTab === "overs" ? (
           <div>
             <div className="text-2xl text-heading font-space font-semibold px-2">
-              <BarChart3 size={20} className="inline-block mr-2 text-cyan-300" />
-              <span>Overs — Manhattan</span>
+              <BarChart3 size={20} className="inline-block mr-2 text-emerald-500" />
+              <span>Overs</span>
             </div>
-            <div className="mt-4 bg-card border-2 border-[#cc66ff]/40 rounded-xl text-heading">
+            <div className="mt-4 surface-card text-heading">
+              <p className="px-5 pt-4 text-sm font-bold uppercase tracking-wider text-subheading">
+                Worm — cumulative runs
+              </p>
+              {wormSeries.length > 0 ? (
+                <WormChart series={wormSeries} />
+              ) : (
+                <p className="text-subheading px-5 py-4">
+                  No overs bowled yet.
+                </p>
+              )}
+            </div>
+            <div className="mt-4 surface-card text-heading">
+              <p className="px-5 pt-4 text-sm font-bold uppercase tracking-wider text-subheading">
+                Manhattan — runs per over
+              </p>
               <Manhattan overs={selectedView?.overs || []} />
             </div>
           </div>
         ) : (
           <div>
             <div className="text-2xl text-heading font-space font-semibold px-2">
-              <Award size={20} className="inline-block mr-2 text-cyan-300" />
+              <Award size={20} className="inline-block mr-2 text-emerald-500" />
               <span>Match Details</span>
             </div>
             <MatchDetails match={match} />

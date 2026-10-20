@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -26,6 +26,14 @@ import {
 const ZERO_EXTRAS = { wide: 0, noBall: 0, bye: 0, legBye: 0, penalty: 0 };
 const RUN_BUTTONS = [0, 1, 2, 3, 4, 6];
 
+/** Fresh idempotency key for one scoring tap. */
+function newClientEventId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 const ScorerConsole = () => {
   const { matchId } = useParams();
   const scorerId = getScorerId();
@@ -44,7 +52,12 @@ const ScorerConsole = () => {
   const [sheet, setSheet] = useState(null); // striker|nonStriker|bowler|wide|noball|bye|legbye|wicket
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState(null);
+  const [postNotice, setPostNotice] = useState(null);
   const [resultText, setResultText] = useState(null);
+  // Idempotency: one clientEventId per user tap. If a post fails and the
+  // scorer retries the exact same ball, the same id is reused so the
+  // server can de-duplicate instead of double-scoring.
+  const attemptRef = useRef(null);
 
   /* ------------------------------ loading ------------------------------ */
 
@@ -264,6 +277,23 @@ const ScorerConsole = () => {
     async (fragment) => {
       setPosting(true);
       setPostError(null);
+      setPostNotice(null);
+      // Reuse the id when this call is a retry of the same tap (identical
+      // ball + crease state); any new tap mints a fresh id.
+      const sig = JSON.stringify({
+        inningNumber,
+        striker,
+        nonStriker,
+        bowler,
+        fragment,
+      });
+      if (!attemptRef.current || attemptRef.current.sig !== sig) {
+        attemptRef.current = { sig, id: newClientEventId() };
+      }
+      const expectedSequence =
+        inningsByNum[inningNumber]?.state?.ballsBowled ??
+        inningsByNum[inningNumber]?.events?.length ??
+        0;
       try {
         const payload = {
           inningNumber,
@@ -273,8 +303,11 @@ const ScorerConsole = () => {
           batRuns: fragment.batRuns || 0,
           extras: { ...ZERO_EXTRAS, ...(fragment.extras || {}) },
           wicket: fragment.wicket ?? null,
+          clientEventId: attemptRef.current.id,
+          expectedSequence,
         };
         const res = await api.post(`/ballByball/${matchId}`, payload);
+        attemptRef.current = null;
         if (res?.result) {
           setResultText(
             typeof res.result === "string" ? res.result : res.result.text
@@ -305,7 +338,16 @@ const ScorerConsole = () => {
         setSheet(null);
       } catch (err) {
         setSheet(null);
-        setPostError(err.message || "Could not save that ball. Try again.");
+        if (err.status === 409) {
+          // Someone else scored against a newer state (or this tap was
+          // already recorded). Drop the idempotency key and resync.
+          attemptRef.current = null;
+          setPostNotice("Score was updated elsewhere — refreshed");
+          await refreshInnings();
+          await loadMatch().catch(() => {});
+        } else {
+          setPostError(err.message || "Could not save that ball. Try again.");
+        }
       } finally {
         setPosting(false);
       }
@@ -316,6 +358,7 @@ const ScorerConsole = () => {
       striker,
       nonStriker,
       bowler,
+      inningsByNum,
       refreshInnings,
       loadMatch,
       loadInnings,
@@ -325,6 +368,7 @@ const ScorerConsole = () => {
   const undo = useCallback(async () => {
     setPosting(true);
     setPostError(null);
+    setPostNotice(null);
     try {
       await api.del(`/ballByball/${matchId}/last`, { inningNumber });
       setResultText(null);
@@ -398,7 +442,7 @@ const ScorerConsole = () => {
       type="button"
       onClick={onTap}
       disabled={disabled}
-      className="w-full min-h-14 px-4 py-2 rounded-xl border-2 border-secondary bg-secondary/40 flex items-center justify-between text-left cursor-pointer disabled:cursor-default"
+      className="w-full min-h-14 px-4 py-2 rounded-xl bg-card ring-1 ring-black/5 dark:ring-white/10 shadow-sm hover:ring-emerald-500/40 flex items-center justify-between text-left cursor-pointer disabled:cursor-default transition-all duration-200"
     >
       <span>
         <span className="block text-[11px] uppercase tracking-wider text-secondary font-bold">
@@ -409,7 +453,7 @@ const ScorerConsole = () => {
         </span>
       </span>
       <span className="flex items-center gap-1 text-subheading">
-        <span className="font-space font-semibold text-sm">{figures}</span>
+        <span className="font-space font-semibold text-sm tabular-nums">{figures}</span>
         {!disabled && <ChevronRight size={18} />}
       </span>
     </button>
@@ -426,10 +470,10 @@ const ScorerConsole = () => {
     : "";
 
   const padBtn =
-    "min-h-14 rounded-xl border-2 font-space font-bold text-xl flex items-center justify-center cursor-pointer active:scale-95 transition-transform disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100";
+    "min-h-14 rounded-2xl border font-space font-bold text-xl flex items-center justify-center cursor-pointer shadow-sm select-none active:scale-95 transition-all duration-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100";
 
   return (
-    <div className="min-h-screen max-w-2xl mx-auto px-3 py-4 pb-10">
+    <div className="min-h-screen max-w-2xl mx-auto px-3 py-4 pb-28">
       {/* top bar */}
       <div className="flex items-center justify-between gap-2">
         <Link
@@ -448,7 +492,11 @@ const ScorerConsole = () => {
       </p>
 
       {/* innings tabs */}
-      <div className="grid grid-cols-2 gap-2 mt-4" role="tablist" aria-label="Innings">
+      <div
+        className="grid grid-cols-2 gap-1 p-1.5 mt-4 rounded-2xl bg-secondary/50 ring-1 ring-black/5 dark:ring-white/10"
+        role="tablist"
+        aria-label="Innings"
+      >
         {[1, 2].map((n) => (
           <button
             key={n}
@@ -459,10 +507,10 @@ const ScorerConsole = () => {
               setPostError(null);
               if (!inningsByNum[n]) loadInnings(n);
             }}
-            className={`min-h-12 rounded-xl font-bold cursor-pointer ${
+            className={`min-h-11 rounded-xl font-bold cursor-pointer text-sm transition-all duration-200 ${
               inningNumber === n
-                ? "bg-[#af14fd] text-white"
-                : "bg-card border-2 card-border text-heading"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+                : "text-subheading hover:text-heading"
             }`}
           >
             Innings {n}
@@ -473,7 +521,7 @@ const ScorerConsole = () => {
       {!cur ? (
         <Spinner label="Loading innings…" />
       ) : cur.notStarted ? (
-        <div className="mt-6 bg-card border-2 card-border rounded-xl p-6 text-center">
+        <div className="mt-6 surface-card p-6 text-center">
           <p className="text-heading font-bold">
             Innings {inningNumber} has not started
           </p>
@@ -488,7 +536,7 @@ const ScorerConsole = () => {
       ) : (
         <>
           {/* score header */}
-          <div className="mt-4 bg-card border-2 border-[#cc66ff]/50 rounded-xl p-4 shadow-md">
+          <div className="mt-4 surface-card p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="font-bold text-heading text-lg leading-tight">
@@ -505,13 +553,13 @@ const ScorerConsole = () => {
               )}
             </div>
             <div className="flex items-end justify-between mt-2 flex-wrap gap-2">
-              <p className="font-space font-black text-4xl text-heading">
+              <p className="font-space font-black text-4xl text-heading tabular-nums">
                 {view?.runs}/{view?.wickets}
                 <span className="text-lg text-subheading font-semibold ml-2">
                   ({view?.oversText} ov)
                 </span>
               </p>
-              <div className="text-right text-sm font-semibold text-subheading">
+              <div className="text-right text-sm font-semibold text-subheading tabular-nums">
                 <p>
                   CRR{" "}
                   <span className="font-space text-heading">
@@ -558,7 +606,7 @@ const ScorerConsole = () => {
 
           {/* result / completion banner */}
           {(resultText || view?.isComplete || match?.result) && (
-            <div className="mt-3 bg-emerald-500/15 border-2 border-emerald-500/40 rounded-xl p-3 text-center">
+            <div className="mt-3 bg-emerald-500/15 ring-1 ring-emerald-500/40 rounded-xl p-3 text-center">
               <Trophy className="inline text-emerald-500" size={18} />{" "}
               <span className="font-semibold text-heading">
                 {resultText ||
@@ -574,7 +622,7 @@ const ScorerConsole = () => {
           {postError && (
             <div
               role="alert"
-              className="mt-3 bg-red-500/15 border-2 border-red-500/40 rounded-xl p-3 flex items-start justify-between gap-2"
+              className="mt-3 bg-red-500/15 ring-1 ring-red-500/40 rounded-xl p-3 flex items-start justify-between gap-2"
             >
               <span className="text-sm font-semibold text-red-600 dark:text-red-400">
                 {postError}
@@ -584,6 +632,26 @@ const ScorerConsole = () => {
                 aria-label="Dismiss error"
                 onClick={() => setPostError(null)}
                 className="text-red-500 cursor-pointer shrink-0"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
+
+          {/* conflict notice (409 — state resynced from the server) */}
+          {postNotice && (
+            <div
+              role="status"
+              className="mt-3 bg-amber-500/15 ring-1 ring-amber-500/40 rounded-xl p-3 flex items-start justify-between gap-2"
+            >
+              <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
+                {postNotice}
+              </span>
+              <button
+                type="button"
+                aria-label="Dismiss notice"
+                onClick={() => setPostNotice(null)}
+                className="text-amber-500 cursor-pointer shrink-0"
               >
                 <X size={18} />
               </button>
@@ -627,7 +695,7 @@ const ScorerConsole = () => {
               onClick={() =>
                 setSheet(needsBatsman ? (!striker ? "striker" : "nonStriker") : "bowler")
               }
-              className="w-full min-h-12 mt-3 rounded-xl bg-amber-500/20 border-2 border-amber-500/60 text-heading font-bold cursor-pointer"
+              className="w-full min-h-12 mt-3 rounded-xl bg-amber-500/15 ring-1 ring-amber-500/50 text-heading font-bold cursor-pointer"
             >
               {needsBatsman
                 ? "Select the batsman at the crease to continue"
@@ -646,10 +714,10 @@ const ScorerConsole = () => {
                   onClick={() => postBall({ batRuns: n })}
                   className={`${padBtn} ${
                     n === 4
-                      ? "bg-purple-700 text-white border-purple-700"
+                      ? "bg-emerald-600 text-white border-emerald-600"
                       : n === 6
-                        ? "bg-blue-700 text-white border-blue-700"
-                        : "bg-card border-secondary text-heading"
+                        ? "bg-emerald-500 text-white border-emerald-500"
+                        : "bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600/70 text-heading"
                   }`}
                 >
                   {n}
@@ -661,7 +729,7 @@ const ScorerConsole = () => {
                 type="button"
                 disabled={padDisabled}
                 onClick={() => setSheet("wide")}
-                className={`${padBtn} bg-amber-500/90 text-white border-amber-500 text-base`}
+                className={`${padBtn} bg-amber-500 text-white border-amber-500 text-base`}
               >
                 WD
               </button>
@@ -669,7 +737,7 @@ const ScorerConsole = () => {
                 type="button"
                 disabled={padDisabled}
                 onClick={() => setSheet("noball")}
-                className={`${padBtn} bg-orange-500/90 text-white border-orange-500 text-base`}
+                className={`${padBtn} bg-amber-600 text-white border-amber-600 text-base`}
               >
                 NB
               </button>
@@ -677,7 +745,7 @@ const ScorerConsole = () => {
                 type="button"
                 disabled={padDisabled}
                 onClick={() => setSheet("bye")}
-                className={`${padBtn} bg-card border-secondary text-heading text-base`}
+                className={`${padBtn} bg-sky-600 text-white border-sky-600 text-base`}
               >
                 BYE
               </button>
@@ -685,27 +753,19 @@ const ScorerConsole = () => {
                 type="button"
                 disabled={padDisabled}
                 onClick={() => setSheet("legbye")}
-                className={`${padBtn} bg-card border-secondary text-heading text-base`}
+                className={`${padBtn} bg-sky-500 text-white border-sky-500 text-base`}
               >
                 LB
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className="mt-2">
               <button
                 type="button"
                 disabled={padDisabled}
                 onClick={() => setSheet("wicket")}
-                className={`${padBtn} bg-red-600 text-white border-red-600 tracking-wide`}
+                className={`${padBtn} w-full bg-red-600 text-white border-red-600 tracking-wide`}
               >
                 WICKET
-              </button>
-              <button
-                type="button"
-                disabled={posting || (cur?.events?.length ?? 0) === 0}
-                onClick={undo}
-                className={`${padBtn} bg-secondary text-heading border-secondary`}
-              >
-                <RotateCcw size={20} className="mr-2" /> UNDO
               </button>
             </div>
             {posting && (
@@ -728,9 +788,9 @@ const ScorerConsole = () => {
                   .map(({ ev, label }, i) => (
                     <div
                       key={ev._id || i}
-                      className="flex items-center gap-3 bg-card border card-border rounded-lg px-3 py-2"
+                      className="flex items-center gap-3 bg-card ring-1 ring-black/5 dark:ring-white/10 rounded-xl px-3 py-2 shadow-sm"
                     >
-                      <span className="font-space font-bold text-subheading text-sm w-10">
+                      <span className="font-space font-bold text-subheading text-sm w-10 tabular-nums">
                         {label}
                       </span>
                       <span className="flex-1 text-sm text-heading truncate">
@@ -742,6 +802,41 @@ const ScorerConsole = () => {
               </div>
             </div>
           )}
+
+          {/* sticky action bar: innings status + undo */}
+          <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-none">
+            <div className="max-w-2xl mx-auto px-3 pb-3">
+              <div className="glass surface-card pointer-events-auto flex items-center gap-3 px-4 py-3 shadow-2xl">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-secondary">
+                    Innings {inningNumber}
+                    {view?.freeHit ? " · Free hit" : ""}
+                    {view?.isComplete ? " · Complete" : ""}
+                  </p>
+                  <p className="font-space font-bold text-heading tabular-nums truncate">
+                    {battingTeamName} {view?.runs}/{view?.wickets}
+                    <span className="text-subheading text-sm font-semibold">
+                      {" "}
+                      ({view?.oversText} ov)
+                    </span>
+                  </p>
+                </div>
+                {posting && (
+                  <span className="text-xs font-semibold text-subheading animate-pulse shrink-0">
+                    Saving…
+                  </span>
+                )}
+                <button
+                  type="button"
+                  disabled={posting || (cur?.events?.length ?? 0) === 0}
+                  onClick={undo}
+                  className="min-h-11 px-4 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold text-sm flex items-center gap-2 cursor-pointer shadow active:scale-95 transition-all duration-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 shrink-0"
+                >
+                  <RotateCcw size={17} /> UNDO
+                </button>
+              </div>
+            </div>
+          </div>
         </>
       )}
 

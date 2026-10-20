@@ -29,7 +29,7 @@ export default class ErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div className="min-h-[50vh] flex items-center justify-center px-4 py-16">
-          <div className="bg-card border-2 border-red-500/40 rounded-xl p-8 max-w-md w-full text-center shadow-md">
+          <div className="surface-card ring-1 ring-red-500/30 p-8 max-w-md w-full text-center">
             <AlertTriangle className="mx-auto text-red-500" size={36} />
             <p className="mt-3 text-xl font-space font-bold text-heading">
               Something went wrong
@@ -46,7 +46,7 @@ export default class ErrorBoundary extends Component {
             <button
               type="button"
               onClick={this.handleReset}
-              className="mt-5 px-5 py-2.5 rounded-xl text-sm font-semibold text-black bg-gradient-to-r from-[#cc66ff] to-[#00dbde] cursor-pointer"
+              className="mt-5 px-5 py-2.5 rounded-xl text-sm font-semibold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635] cursor-pointer"
             >
               Try again
             </button>

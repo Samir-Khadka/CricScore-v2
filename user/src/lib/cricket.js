@@ -168,6 +168,8 @@ export function inningsView(inning, state) {
     nonStrikerId: state?.nonStriker ?? inning?.non_striker ?? null,
     currentBowlerId: state?.currentBowler ?? inning?.current_bowler ?? null,
     currentPair: state?.currentPair ?? null,
+    winProbability: state?.winProbability ?? null,
+    partnerships: state?.partnerships ?? [],
     status: inning?.status || null,
     inningNumber: inning?.inningNumber ?? null,
     battingTeam: inning?.batting_team ?? null,
@@ -221,13 +223,76 @@ export function eventCommentary(ev) {
 /** Tailwind classes for a ball symbol chip (this-over strip / timeline). */
 export function ballChipClass(symbol) {
   const s = String(symbol ?? "").trim();
-  if (s === "W" || s.endsWith("W")) return "bg-red-600 text-white border-red-600";
-  if (s === "6") return "bg-blue-700 text-white border-blue-700";
-  if (s === "4") return "bg-purple-700 text-white border-purple-700";
-  if (/wd/i.test(s)) return "bg-amber-500/90 text-white border-amber-500";
-  if (/nb/i.test(s)) return "bg-orange-500/90 text-white border-orange-500";
+  if (s === "W" || s.endsWith("W")) return "bg-rose-600 text-white border-rose-600";
+  if (s === "6") return "bg-violet-600 text-white border-violet-600";
+  if (s === "4") return "bg-emerald-600 text-white border-emerald-600";
+  if (/wd/i.test(s)) return "bg-amber-500 text-white border-amber-500";
+  if (/nb/i.test(s)) return "bg-amber-600 text-white border-amber-600";
   if (s === "•" || s === "0") return "bg-secondary text-subheading border-secondary";
   return "bg-card text-heading border-secondary";
+}
+
+/* ------------------------- team monograms -------------------------- */
+
+/** Solid chip colours for team monograms (deterministic per team name). */
+const TEAM_COLORS = [
+  "bg-emerald-600",
+  "bg-rose-600",
+  "bg-sky-600",
+  "bg-amber-500",
+  "bg-violet-600",
+  "bg-cyan-600",
+  "bg-lime-600",
+  "bg-fuchsia-600",
+  "bg-indigo-600",
+  "bg-orange-600",
+  "bg-teal-600",
+  "bg-blue-700",
+];
+
+/** Up-to-two-letter monogram for a team name ("Kathmandu Kings" → "KK"). */
+export function teamInitials(name) {
+  const words = String(name || "")
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean);
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+function teamColorIndex(name) {
+  const s = String(name || "");
+  let hash = 0;
+  for (let i = 0; i < s.length; i++) {
+    hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+  }
+  return hash % TEAM_COLORS.length;
+}
+
+/** Deterministic monogram colour class for a team name. */
+export function teamColorClass(name) {
+  return TEAM_COLORS[teamColorIndex(name)];
+}
+
+/** Hex equivalents of TEAM_COLORS, same index — for SVG fills/strokes. */
+const TEAM_COLOR_HEX = [
+  "#059669", // emerald-600
+  "#e11d48", // rose-600
+  "#0284c7", // sky-600
+  "#f59e0b", // amber-500
+  "#7c3aed", // violet-600
+  "#0891b2", // cyan-600
+  "#65a30d", // lime-600
+  "#c026d3", // fuchsia-600
+  "#4f46e5", // indigo-600
+  "#ea580c", // orange-600
+  "#0d9488", // teal-600
+  "#1d4ed8", // blue-700
+];
+
+/** Deterministic team colour as a hex value (charts, meters). */
+export function teamColorHex(name) {
+  return TEAM_COLOR_HEX[teamColorIndex(name)];
 }
 
 /** Ball symbol for one event — mirrors the backend engine's ballSymbol(). */

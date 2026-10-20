@@ -31,7 +31,7 @@ export default function PickerSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[3px] animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -39,7 +39,7 @@ export default function PickerSheet({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative w-full sm:max-w-lg max-h-[82vh] flex flex-col bg-card rounded-t-2xl sm:rounded-2xl border-2 card-border shadow-xl"
+        className="relative w-full sm:max-w-lg max-h-[82vh] flex flex-col bg-card rounded-t-2xl sm:rounded-2xl ring-1 ring-black/10 dark:ring-white/10 shadow-2xl animate-slide-up"
       >
         <div className="flex items-start justify-between p-4 border-b card-border">
           <div>
@@ -76,7 +76,7 @@ export default function PickerSheet({
                   isDisabled
                     ? "opacity-40 cursor-not-allowed border-secondary"
                     : isSelected
-                      ? "border-[#cc66ff] bg-[#cc66ff]/10 cursor-pointer"
+                      ? "border-[#10b981] bg-[#10b981]/10 cursor-pointer"
                       : "border-secondary bg-secondary/40 cursor-pointer"
                 }`}
               >
@@ -91,7 +91,7 @@ export default function PickerSheet({
                       : p.role || ""}
                   </span>
                 </span>
-                {isSelected && <Check className="text-[#cc66ff]" size={22} />}
+                {isSelected && <Check className="text-[#10b981]" size={22} />}
               </button>
             );
           })}
@@ -102,7 +102,7 @@ export default function PickerSheet({
             <button
               type="button"
               onClick={onConfirm}
-              className="w-full min-h-14 rounded-xl font-bold text-black bg-gradient-to-r from-[#cc66ff] to-[#00dbde] cursor-pointer"
+              className="w-full min-h-14 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635] cursor-pointer"
             >
               Done
             </button>

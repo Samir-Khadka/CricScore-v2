@@ -1,34 +1,47 @@
 import { Link } from "react-router-dom";
+import { Zap } from "lucide-react";
+
+const footerLink =
+  "text-[13px] text-secondary hover:text-heading transition-colors";
 
 const Footer = () => {
   return (
-    <footer className="w-full bg-card border-t card-border mt-10 p-6 flex flex-col sm:flex-row gap-10 px-6 md:pl-10">
-      <div>
-        <header className="text-xl text-heading font-space">CricScore</header>
-        <p className="text-sm text-subheading font-inter mt-2">
-          A real-time cricket scoring platform with real-time score updates.
-        </p>
-        <div className="text-secondary pt-10 text-sm">&copy; CricScore</div>
-      </div>
-      <div className="flex flex-col text-subheading text-sm space-y-3">
-        <Link to="/" className="hover:text-[#cc66ff] transition-colors">
-          Home
-        </Link>
-        <Link
-          to="/matches/live"
-          className="hover:text-[#cc66ff] transition-colors"
+    <footer className="w-full border-t card-border mt-16">
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-8 flex flex-col sm:flex-row sm:items-start gap-8">
+        <div className="max-w-xs">
+          <div className="flex items-center gap-2">
+            <span className="h-6 w-6 rounded-lg bg-gradient-to-br from-emerald-500 to-lime-400 grid place-items-center text-slate-950">
+              <Zap size={13} strokeWidth={2.75} fill="currentColor" />
+            </span>
+            <span className="text-[15px] font-space font-bold text-heading">
+              Cric<span className="text-emerald-500">Score</span>
+            </span>
+          </div>
+          <p className="text-[13px] leading-relaxed text-secondary font-inter mt-2.5">
+            A real-time cricket scoring platform with live score updates for
+            local tournaments.
+          </p>
+          <div className="text-secondary/70 pt-4 text-xs">
+            &copy; {new Date().getFullYear()} CricScore
+          </div>
+        </div>
+        <nav
+          className="flex flex-col gap-2.5 sm:ml-auto"
+          aria-label="Footer"
         >
-          Matches
-        </Link>
-        <Link
-          to="/tournaments"
-          className="hover:text-[#cc66ff] transition-colors"
-        >
-          Tournaments
-        </Link>
-        <Link to="/score" className="hover:text-[#cc66ff] transition-colors">
-          Scorer Dashboard
-        </Link>
+          <Link to="/" className={footerLink}>
+            Home
+          </Link>
+          <Link to="/matches/live" className={footerLink}>
+            Matches
+          </Link>
+          <Link to="/tournaments" className={footerLink}>
+            Tournaments
+          </Link>
+          <Link to="/score" className={footerLink}>
+            Scorer Dashboard
+          </Link>
+        </nav>
       </div>
     </footer>
   );

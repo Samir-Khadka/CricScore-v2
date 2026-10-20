@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import LiveCard from "../components/ScoreSummaryCard";
+import LiveDot from "../components/LiveDot";
 import UpcomingCard from "../components/Upcoming";
 import Recent from "../components/Recent";
 import { ErrorBox, SkeletonCard } from "../components/States";
@@ -58,9 +59,7 @@ const Matches = () => {
     <section className="px-4 md:px-10 py-6 min-h-screen max-w-[1400px] mx-auto">
       <div className="mt-6">
         <div className="text-2xl text-heading font-space font-semibold tracking-wide capitalize">
-          {type === "live" && (
-            <span className="inline-block animate-pulse w-4 h-4 bg-rose-500 rounded-full mr-2 align-middle" />
-          )}
+          {type === "live" && <LiveDot className="mr-2.5 -translate-y-0.5" />}
           {type} Matches
         </div>
       </div>

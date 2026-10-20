@@ -304,3 +304,101 @@ test("matchResult: runs win, wickets win, tie", () => {
   assert.equal(r2.winner, "A");
   assert.match(r2.text, /Alpha won by 6 runs/);
 });
+
+test("dismissal must be possible on the delivery: wide/no-ball law", () => {
+  const wide = { wide: 1, noBall: 0, bye: 0, legBye: 0, penalty: 0 };
+  const nb = { wide: 0, noBall: 1, bye: 0, legBye: 0, penalty: 0 };
+  // stumped off a wide: legal, bowler gets the wicket
+  const s = computeInningsState(
+    [ball({ extras: wide, wicket: { type: "stumped", playerOut: "p1", fielders: ["x1"] } })],
+    CFG
+  );
+  assert.equal(s.wickets, 1);
+  assert.equal(s.bowlers[0].wickets, 1);
+  // bowled off a wide: impossible
+  assert.throws(
+    () => computeInningsState([ball({ extras: wide, wicket: { type: "bowled", playerOut: "p1", fielders: [] } })], CFG),
+    (e) => e.code === "INVALID_DISMISSAL"
+  );
+  // stumped off a no-ball: not out in cricket
+  assert.throws(
+    () => computeInningsState([ball({ extras: nb, wicket: { type: "stumped", playerOut: "p1", fielders: ["x1"] } })], CFG),
+    (e) => e.code === "INVALID_DISMISSAL"
+  );
+  // run out off a no-ball: legal
+  const s2 = computeInningsState(
+    [ball({ extras: nb, batRuns: 1, wicket: { type: "run_out", playerOut: "p1", fielders: ["x1"] } })],
+    CFG
+  );
+  assert.equal(s2.wickets, 1);
+});
+
+test("non-integer or negative runs are rejected", () => {
+  assert.throws(
+    () => computeInningsState([ball({ batRuns: 1.5 })], CFG),
+    (e) => e.code === "INVALID_EVENT"
+  );
+  assert.throws(
+    () => computeInningsState([ball({ batRuns: -1 })], CFG),
+    (e) => e.code === "INVALID_EVENT"
+  );
+});
+
+test("partnerships: completed stands recorded, current stand ongoing", () => {
+  const balls = [
+    ball({ batRuns: 4 }),
+    ball({ batRuns: 2 }),
+    ball({ wicket: { type: "bowled", playerOut: "p1", fielders: [] } }),
+    ball({ striker: "p3", nonStriker: "p2", batRuns: 6 }),
+  ];
+  const s = computeInningsState(balls, CFG);
+  assert.equal(s.partnerships.length, 2);
+  assert.equal(s.partnerships[0].runs, 6);
+  assert.equal(s.partnerships[0].balls, 3);
+  assert.equal(s.partnerships[0].wicket, 1);
+  assert.equal(s.partnerships[0].ongoing, false);
+  assert.equal(s.partnerships[1].runs, 6);
+  assert.equal(s.partnerships[1].ongoing, true);
+});
+
+test("win probability: null in innings 1, sane in a chase, 100 when home", () => {
+  const inn1 = computeInningsState([ball({ batRuns: 4 })], CFG);
+  assert.equal(inn1.winProbability, null);
+  // Chase 101: 90/0 off 60 balls -> strongly favoured
+  const ahead = [];
+  const rotA = ["b1", "b2", "b3", "b4", "b1", "b2", "b3", "b4", "b1", "b2"];
+  for (const bw of rotA) ahead.push(...over(bw, [{ batRuns: 4 }, { batRuns: 2 }, { batRuns: 1 }, { batRuns: 1 }, { batRuns: 1 }, {}]));
+  const sAhead = computeInningsState(ahead, CHASE);
+  assert.equal(sAhead.runs, 90);
+  assert.ok(sAhead.winProbability.batting > 70, JSON.stringify(sAhead.winProbability));
+  // 20/3 off 60 balls chasing 101 -> long odds
+  const B = (bowler, striker, nonStriker, extra = {}) => ball({ bowler, striker, nonStriker, ...extra });
+  const behind = [
+    // over 1 (b1): 1,1,W,0,0,0
+    B("b1", "p1", "p2", { batRuns: 1 }), B("b1", "p2", "p1", { batRuns: 1 }),
+    B("b1", "p1", "p2", { wicket: { type: "bowled", playerOut: "p1", fielders: [] } }),
+    B("b1", "p3", "p2"), B("b1", "p3", "p2"), B("b1", "p3", "p2"),
+    // over 2 (b2): 1,1,W,0,0,0
+    B("b2", "p3", "p2", { batRuns: 1 }), B("b2", "p2", "p3", { batRuns: 1 }),
+    B("b2", "p3", "p2", { wicket: { type: "bowled", playerOut: "p3", fielders: [] } }),
+    B("b2", "p4", "p2"), B("b2", "p4", "p2"), B("b2", "p4", "p2"),
+    // over 3 (b3): W,1,1,0,0,0
+    B("b3", "p4", "p2", { wicket: { type: "bowled", playerOut: "p4", fielders: [] } }),
+    B("b3", "p5", "p2", { batRuns: 1 }), B("b3", "p2", "p5", { batRuns: 1 }),
+    B("b3", "p5", "p2"), B("b3", "p5", "p2"), B("b3", "p5", "p2"),
+  ];
+  const rot = ["b4", "b1", "b2", "b3", "b4", "b1", "b2"];
+  for (const bw of rot) {
+    behind.push(
+      B(bw, "p5", "p2", { batRuns: 1 }), B(bw, "p2", "p5", { batRuns: 1 }),
+      B(bw, "p5", "p2"), B(bw, "p5", "p2"), B(bw, "p5", "p2"), B(bw, "p5", "p2")
+    );
+  }
+  const sBehind = computeInningsState(behind, CHASE);
+  assert.equal(sBehind.runs, 20);
+  assert.equal(sBehind.wickets, 3);
+  assert.ok(sBehind.winProbability.batting < 30, JSON.stringify(sBehind.winProbability));
+  // Completed chase
+  const done = computeInningsState([ball({ batRuns: 6 })], { totalOvers: 20, target: 6, playerNames: NAMES });
+  assert.deepEqual(done.winProbability, { batting: 100, bowling: 0 });
+});

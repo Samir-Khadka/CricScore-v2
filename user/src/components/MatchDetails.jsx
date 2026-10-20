@@ -12,7 +12,7 @@ const MatchDetails = ({ match }) => {
   const playingXI = Array.isArray(match.playingXI) ? match.playingXI : [];
 
   return (
-    <div className="mt-2 p-6 text-heading font-semibold">
+    <div className="mt-2 surface-card p-6 text-heading font-semibold">
       <div className="space-y-1">
         {match.venue && <p>Venue: {match.venue}</p>}
         {match.match_date && (

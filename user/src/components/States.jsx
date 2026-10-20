@@ -5,7 +5,7 @@ import { AlertCircle, Inbox, Loader2 } from "lucide-react";
 export function Spinner({ label = "Loading…" }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-subheading">
-      <Loader2 className="animate-spin text-[#cc66ff]" size={32} />
+      <Loader2 className="animate-spin text-[#10b981]" size={32} />
       <p className="text-sm font-medium">{label}</p>
     </div>
   );
@@ -22,7 +22,7 @@ export function ErrorBox({ message, onRetry }) {
         <button
           type="button"
           onClick={onRetry}
-          className="mt-1 px-5 py-2 rounded-xl text-sm font-semibold text-black bg-gradient-to-r from-[#cc66ff] to-[#00dbde] cursor-pointer"
+          className="mt-1 px-5 py-2.5 rounded-full text-sm font-bold text-slate-950 bg-gradient-to-r from-emerald-500 to-lime-400 cursor-pointer shadow-lg shadow-emerald-500/25"
         >
           Retry
         </button>
@@ -42,19 +42,26 @@ export function EmptyBox({ message }) {
 
 export function SkeletonCard() {
   return (
-    <div className="bg-card w-full md:w-100 lg:w-72 h-72 rounded-lg shadow-md border-2 border-secondary/40 p-4 animate-pulse">
-      <div className="h-5 w-2/3 rounded bg-secondary" />
-      <div className="h-4 w-1/3 rounded bg-secondary mt-2" />
-      <div className="space-y-4 mt-10">
-        <div className="flex justify-between">
-          <div className="h-6 w-24 rounded bg-secondary" />
-          <div className="h-6 w-16 rounded bg-secondary" />
+    <div className="surface-card w-full md:w-[340px] p-5 animate-pulse overflow-hidden relative">
+      <div className="shimmer absolute inset-0 pointer-events-none" />
+      <div className="h-5 w-2/3 rounded-md bg-secondary" />
+      <div className="h-4 w-1/3 rounded-md bg-secondary mt-2" />
+      <div className="space-y-4 mt-8">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-full bg-secondary" />
+            <div className="h-6 w-24 rounded-md bg-secondary" />
+          </div>
+          <div className="h-6 w-16 rounded-md bg-secondary" />
         </div>
-        <div className="flex justify-between">
-          <div className="h-6 w-24 rounded bg-secondary" />
-          <div className="h-6 w-16 rounded bg-secondary" />
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-full bg-secondary" />
+            <div className="h-6 w-24 rounded-md bg-secondary" />
+          </div>
+          <div className="h-6 w-16 rounded-md bg-secondary" />
         </div>
-        <div className="h-8 w-full rounded bg-secondary" />
+        <div className="h-8 w-full rounded-lg bg-secondary" />
       </div>
     </div>
   );

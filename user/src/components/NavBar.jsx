@@ -1,46 +1,70 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Menu, Moon, Sun, X } from "lucide-react";
+import { Menu, Moon, Sun, X, Zap } from "lucide-react";
 import { useThemeSwitch } from "../context/color-mode";
 import { getScorerId } from "../lib/api";
 
 const linkClass = ({ isActive }) =>
-  `hover:text-[#cc66ff] transition-all hover:border-b-3 border-[#cc66ff] ${
-    isActive ? "text-[#cc66ff]" : ""
+  `px-3.5 py-2 rounded-full text-sm transition-all duration-200 ${
+    isActive
+      ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-bold"
+      : "text-subheading hover:text-heading hover:bg-secondary/70 font-semibold"
   }`;
 
 const NavBar = () => {
   const { isDark, toggleTheme } = useThemeSwitch();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const scorerId = getScorerId();
 
   const closeMenu = () => setMenuOpen(false);
+
+  // The bar turns glassy (blur + deeper shadow) once the page scrolls.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const themeButton = (
     <button
       type="button"
       onClick={toggleTheme}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="p-2 rounded-lg text-subheading hover:text-[#cc66ff] transition-colors cursor-pointer"
+      className="p-2 rounded-full text-subheading hover:text-heading hover:bg-secondary/70 transition-colors cursor-pointer"
     >
-      {isDark ? <Sun size={20} /> : <Moon size={20} />}
+      {isDark ? <Sun size={19} /> : <Moon size={19} />}
     </button>
   );
 
+  const logo = (
+    <Link
+      to="/"
+      className="flex items-center gap-2.5 shrink-0"
+      onClick={closeMenu}
+      aria-label="CricScore home"
+    >
+      <span className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-lime-400 grid place-items-center text-slate-950 shadow-lg shadow-emerald-500/30 ring-1 ring-white/20">
+        <Zap size={19} strokeWidth={2.75} fill="currentColor" />
+      </span>
+      <span className="text-[22px] leading-none font-space font-bold tracking-tight text-heading">
+        Cric<span className="text-emerald-500">Score</span>
+      </span>
+    </Link>
+  );
+
   return (
-    <nav className="w-full shadow-md bg-card border-b card-border backdrop-blur-sm z-50 sticky top-0">
-      <div className="flex flex-row justify-between items-center px-4 md:px-10">
-        {/* logo */}
-        <Link
-          to="/"
-          className="py-4 text-2xl font-space font-bold text-heading"
-          onClick={closeMenu}
-        >
-          CricScore
-        </Link>
+    <nav
+      className={`w-full sticky top-0 z-50 glass border-b card-border transition-shadow duration-300 ${
+        scrolled ? "shadow-[0_10px_36px_-16px_rgba(0,0,0,0.45)]" : ""
+      }`}
+    >
+      <div className="flex flex-row justify-between items-center h-16 px-4 md:px-10 max-w-[1440px] mx-auto w-full">
+        {logo}
 
         {/* desktop nav items */}
-        <div className="hidden lg:flex items-center gap-8 text-subheading font-semibold">
+        <div className="hidden lg:flex items-center gap-1.5">
           <NavLink to="/" className={linkClass} end>
             Home
           </NavLink>
@@ -61,14 +85,14 @@ const NavBar = () => {
           <span className="lg:hidden">{themeButton}</span>
           <Link
             to={scorerId ? "/score" : "/login"}
-            className="hidden sm:inline-block p-3 text-black rounded-xl text-[14px] font-semibold bg-gradient-to-r from-[#cc66ff] to-[#00dbde] cursor-pointer hover:drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all duration-300"
+            className="hidden sm:inline-flex items-center px-4 py-2.5 text-slate-950 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-500 to-lime-400 cursor-pointer shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/45 hover:-translate-y-px active:translate-y-0 transition-all duration-300"
             onClick={closeMenu}
           >
             Start Scoring
           </Link>
           <button
             type="button"
-            className="lg:hidden p-2 rounded-lg text-heading cursor-pointer"
+            className="lg:hidden p-2 rounded-full text-heading hover:bg-secondary/70 cursor-pointer"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
@@ -80,7 +104,7 @@ const NavBar = () => {
 
       {/* mobile menu */}
       {menuOpen && (
-        <div className="lg:hidden border-t card-border bg-card px-6 py-4 flex flex-col gap-4 text-subheading font-semibold">
+        <div className="lg:hidden border-t card-border glass px-4 py-3 flex flex-col gap-1 animate-fade-in">
           <NavLink to="/" className={linkClass} end onClick={closeMenu}>
             Home
           </NavLink>
@@ -95,7 +119,7 @@ const NavBar = () => {
           </NavLink>
           <Link
             to={scorerId ? "/score" : "/login"}
-            className="sm:hidden p-3 text-center text-black rounded-xl text-[14px] font-semibold bg-gradient-to-r from-[#cc66ff] to-[#00dbde]"
+            className="sm:hidden mt-1 px-4 py-3 text-center text-slate-950 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-500 to-lime-400"
             onClick={closeMenu}
           >
             Start Scoring

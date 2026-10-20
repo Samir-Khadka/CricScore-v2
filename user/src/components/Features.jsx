@@ -1,43 +1,48 @@
 import { Tally5, TrendingUp, Trophy } from "lucide-react";
 
+const FEATURES = [
+  {
+    icon: Tally5,
+    chip: "bg-emerald-500/12 text-emerald-500 ring-emerald-500/25",
+    title: "Cricket Scoring Made Simple",
+    text: "No more paper scorecards — score every ball with just a tap. CricScore is built for local scorers, making match updates quick and error-free.",
+  },
+  {
+    icon: TrendingUp,
+    chip: "bg-rose-500/12 text-rose-500 ring-rose-500/25",
+    title: "Real-Time Score Updates",
+    text: "Players, fans, and organizers can follow matches in real time from anywhere. Share your tournament's excitement beyond the boundary.",
+  },
+  {
+    icon: Trophy,
+    chip: "bg-amber-500/12 text-amber-500 ring-amber-500/25",
+    title: "All-in-One Tournament Hub",
+    text: "Fixtures, standings, stats, and scoreboards — everything your local tournament needs, all organized in one place.",
+  },
+];
+
 const Features = () => {
   return (
     <div className="w-full flex flex-row flex-wrap md:flex-nowrap justify-between gap-6 mt-15">
-      {/* feature 1 */}
-      <div className="w-full max-w-[400px] bg-card p-5 rounded-xl flex flex-col items-center border-2 border-emerald-500/50 shadow-md hover:scale-105 transition-all duration-300 cursor-pointer hover:drop-shadow-[0_0_12px_rgba(52,211,153,0.5)]">
-        <Tally5 className="text-emerald-400" size={40} />
-        <p className="text-xl font-bold mt-2 text-heading">
-          Cricket Scoring Made Simple
-        </p>
-        <p className="mt-2 text-sm text-subheading text-justify">
-          No more paper scorecards — score every ball with just a tap. CricScore
-          is built for local scorers, making match updates quick and error-free.
-        </p>
-      </div>
-
-      {/* feature 2 */}
-      <div className="w-full max-w-[400px] bg-card p-5 rounded-xl flex flex-col items-center border-2 border-rose-500/50 shadow-md hover:scale-105 transition-all duration-300 cursor-pointer hover:drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]">
-        <TrendingUp className="text-rose-500" size={40} />
-        <p className="text-xl font-bold mt-2 text-heading">
-          Real-Time Score Updates
-        </p>
-        <p className="mt-2 text-sm text-subheading text-justify">
-          Players, fans, and organizers can follow matches in real time from
-          anywhere. Share your tournament's excitement beyond the boundary.
-        </p>
-      </div>
-
-      {/* feature 3 */}
-      <div className="w-full max-w-[400px] bg-card p-5 rounded-xl flex flex-col items-center border-2 border-fuchsia-500/50 shadow-md hover:scale-105 transition-all duration-300 cursor-pointer hover:drop-shadow-[0_0_12px_rgba(217,70,239,0.5)]">
-        <Trophy className="text-fuchsia-500" size={40} />
-        <p className="text-xl font-bold mt-2 text-heading">
-          All-in-One Tournament Hub
-        </p>
-        <p className="mt-2 text-sm text-subheading text-justify">
-          Fixtures, standings, stats, and scoreboards — everything your local
-          tournament needs, all organized in one place.
-        </p>
-      </div>
+      {FEATURES.map((f) => {
+        const Icon = f.icon;
+        return (
+          <div
+            key={f.title}
+            className="surface-card w-full max-w-[400px] p-6 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1"
+          >
+            <span
+              className={`h-14 w-14 rounded-2xl ring-1 grid place-items-center ${f.chip}`}
+            >
+              <Icon size={26} />
+            </span>
+            <p className="text-lg font-bold mt-4 text-heading">{f.title}</p>
+            <p className="mt-2 text-sm leading-relaxed text-subheading">
+              {f.text}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 };

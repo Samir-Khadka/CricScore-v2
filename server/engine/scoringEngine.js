@@ -46,6 +46,27 @@ const FREE_HIT_BARRED = new Set([
   "hit_wicket",
 ]);
 
+// Dismissals that CAN happen on a wide / a no-ball. Everything else is a
+// scoring impossibility (you cannot be bowled off a wide, or stumped off
+// a no-ball) and is rejected to protect the log from mis-taps.
+const WIDE_DISMISSALS = new Set([
+  "stumped",
+  "run_out",
+  "obstructing",
+  "hit_ball_twice",
+  "retired_hurt",
+  "retired_out",
+  "timed_out",
+]);
+const NO_BALL_DISMISSALS = new Set([
+  "run_out",
+  "obstructing",
+  "hit_ball_twice",
+  "retired_hurt",
+  "retired_out",
+  "timed_out",
+]);
+
 const WICKET_TYPES = new Set([
   ...BOWLER_WICKETS,
   "run_out",
@@ -197,6 +218,7 @@ function computeInningsState(events, config = {}) {
   const batById = new Map();
   const bowlById = new Map();
   let partnership = null; // { members, runs, balls }
+  const partnerships = []; // completed stands, in order
   let overBowler = null; // bowler of the current over
   let prevOverBowler = null;
   let overBalls = []; // events of the current over (for maidens)
@@ -250,8 +272,9 @@ function computeInningsState(events, config = {}) {
     }
     const ex = extrasOf(ev);
     const batRuns = ev.batRuns || 0;
-    if (batRuns < 0 || ex.wide < 0 || ex.noBall < 0 || ex.bye < 0 || ex.legBye < 0) {
-      throw engineError("INVALID_EVENT", `Ball ${idx + 1}: negative runs`);
+    const runValues = [batRuns, ex.wide, ex.noBall, ex.bye, ex.legBye, ex.penalty];
+    if (runValues.some((v) => !Number.isInteger(v) || v < 0)) {
+      throw engineError("INVALID_EVENT", `Ball ${idx + 1}: runs must be non-negative integers`);
     }
     if (!ev.striker || !ev.nonStriker || !ev.bowler) {
       throw engineError("INVALID_EVENT", `Ball ${idx + 1}: striker, nonStriker and bowler are required`);
@@ -296,6 +319,21 @@ function computeInningsState(events, config = {}) {
     }
     if (ev.wicket && !WICKET_TYPES.has(ev.wicket.type)) {
       throw engineError("INVALID_EVENT", `Ball ${idx + 1}: unknown wicket type ${ev.wicket.type}`);
+    }
+    // A dismissal must be physically possible on this delivery.
+    if (ev.wicket) {
+      if (ex.wide > 0 && !WIDE_DISMISSALS.has(ev.wicket.type)) {
+        throw engineError(
+          "INVALID_DISMISSAL",
+          `Ball ${idx + 1}: ${ev.wicket.type} is not possible on a wide ball`
+        );
+      }
+      if (ex.noBall > 0 && !NO_BALL_DISMISSALS.has(ev.wicket.type)) {
+        throw engineError(
+          "INVALID_DISMISSAL",
+          `Ball ${idx + 1}: ${ev.wicket.type} is not possible on a no-ball`
+        );
+      }
     }
 
     const totalRuns = batRuns + ex.wide + ex.noBall + ex.bye + ex.legBye + ex.penalty;
@@ -364,6 +402,17 @@ function computeInningsState(events, config = {}) {
           oversText: oversText(state.legalBalls),
         });
       }
+      // Close out the partnership record before the pair breaks.
+      if (partnership) {
+        partnerships.push({
+          batsmen: partnership.members.map((id) => ({ id, name: names[id] || "Unknown" })),
+          runs: partnership.runs,
+          balls: partnership.balls,
+          wicket: type === "retired_hurt" ? null : state.wickets,
+          retiredHurt: type === "retired_hurt",
+          ongoing: false,
+        });
+      }
       partnership = null; // pair broken; rebuilt on next ball
 
       // Crease: on a run out the batsmen may have crossed before the
@@ -411,6 +460,7 @@ function computeInningsState(events, config = {}) {
   state.oversText = oversText(state.legalBalls);
   state.currentRunRate = oversFraction > 0 ? round2(state.runs / oversFraction) : 0;
   if (target) {
+    state.target = target;
     const remainingBalls = maxBalls - state.legalBalls;
     const needed = target - state.runs;
     state.runsNeeded = Math.max(needed, 0);
@@ -427,6 +477,7 @@ function computeInningsState(events, config = {}) {
   }
   state.extras.total =
     state.extras.wide + state.extras.noBall + state.extras.bye + state.extras.legBye + state.extras.penalty;
+  state.winProbability = target ? winProbability(state, totalOvers) : null;
 
   for (const b of state.batsmen) {
     b.strikeRate = b.balls > 0 ? round2((b.runs / b.balls) * 100) : 0;
@@ -442,13 +493,54 @@ function computeInningsState(events, config = {}) {
       runs: partnership.runs,
       balls: partnership.balls,
     };
+    partnerships.push({
+      batsmen: partnership.members.map((id) => ({ id, name: names[id] || "Unknown" })),
+      runs: partnership.runs,
+      balls: partnership.balls,
+      wicket: null,
+      retiredHurt: false,
+      ongoing: true,
+    });
   }
+  state.partnerships = partnerships;
   state.striker = crease.striker;
   state.nonStriker = crease.nonStriker;
   state.awaitingBatsman =
     !state.isComplete && events.length > 0 && (crease.striker === null || crease.nonStriker === null);
   state.currentBowler = overBowler;
   return state;
+}
+
+/**
+ * Win probability for a chase — heuristic model v1.
+ * Blends a momentum projection (current run rate carried forward) with a
+ * resource projection (par rate for the format), both discounted by
+ * wickets in hand, then maps the projected margin through a logistic.
+ * Returns { batting, bowling } as percentages, or null when not chasing.
+ */
+function winProbability(state, totalOvers) {
+  if (!state || state.runsNeeded == null || state.target == null) return null;
+  const target = state.target;
+  if (state.isComplete) {
+    return state.runs >= target
+      ? { batting: 100, bowling: 0 }
+      : { batting: 0, bowling: 100 };
+  }
+  const ballsLeft = state.ballsRemaining ?? 0;
+  const wicketsLeft = 10 - state.wickets;
+  if (ballsLeft <= 0 || wicketsLeft <= 0) return null;
+
+  const parRR = totalOvers <= 10 ? 9 : totalOvers <= 20 ? 8 : totalOvers <= 40 ? 6.2 : 5.8;
+  const wicketFactor = 0.45 + 0.55 * (wicketsLeft / 10);
+  const oversLeft = ballsLeft / 6;
+  const momentumProj = state.runs + state.currentRunRate * oversLeft * wicketFactor;
+  const resourceProj = state.runs + parRR * oversLeft * wicketFactor;
+  const w = Math.min(1, state.legalBalls / 30); // trust momentum more as the innings settles
+  const projected = w * momentumProj + (1 - w) * resourceProj;
+  const scale = Math.max(6, target * 0.09);
+  const p = 1 / (1 + Math.exp(-(projected - target) / scale));
+  const batting = Math.max(1, Math.min(99, Math.round(p * 100)));
+  return { batting, bowling: 100 - batting };
 }
 
 /**
@@ -477,6 +569,7 @@ function matchResult(inn1, inn2, names) {
 module.exports = {
   computeInningsState,
   matchResult,
+  winProbability,
   describeBall,
   ballSymbol,
   dismissalText,

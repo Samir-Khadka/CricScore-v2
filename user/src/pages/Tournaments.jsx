@@ -32,7 +32,7 @@ const Tournaments = () => {
   return (
     <section className="px-4 md:px-10 py-6 min-h-screen max-w-[1400px] mx-auto">
       <div className="mt-6 text-2xl text-heading font-space font-semibold tracking-wide">
-        <Trophy size={22} className="inline-block mr-2 text-[#cc66ff]" />
+        <Trophy size={22} className="inline-block mr-2 text-[#10b981]" />
         Tournaments
         <p className="text-sm text-subheading mt-1 font-normal font-inter">
           Every tournament running on CricScore.

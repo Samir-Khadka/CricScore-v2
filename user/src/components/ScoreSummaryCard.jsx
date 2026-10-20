@@ -1,6 +1,9 @@
 import { MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { findInnings, matchFormat } from "../lib/cricket";
+import { findInnings, inningsView, matchFormat } from "../lib/cricket";
+import TeamChip from "./TeamChip";
+import LiveDot from "./LiveDot";
+import TimelineItem from "./TimelineItem";
 
 const LiveCard = ({ data }) => {
   const navigate = useNavigate();
@@ -14,23 +17,38 @@ const LiveCard = ({ data }) => {
 
   const scoreLine = (inn) =>
     inn ? (
-      <>
+      <span className="tabular-nums">
         {inn.runs}/{inn.wickets}
-        <span className="text-subheading text-sm font-semibold font-inter mx-2">
+        <span className="text-subheading text-[13px] font-semibold font-inter ml-1.5">
           ({inn.over}.{inn.balls}
           {format ? `/${format}` : ""})
         </span>
-      </>
+      </span>
     ) : (
       <span className="text-subheading text-sm font-inter">Yet to bat</span>
     );
 
   const currentInn =
     data?.inning_in_progress === 2 ? teamBinn || teamAinn : teamAinn;
+  const thisOver = inningsView(currentInn, null)?.thisOver || [];
+
+  const teamRow = (name, inn) => (
+    <div className="flex justify-between items-center gap-3">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <TeamChip name={name} size="md" />
+        <span className="text-heading font-semibold text-[17px] truncate">
+          {name}
+        </span>
+      </div>
+      <div className="font-bold font-space text-xl text-heading shrink-0">
+        {scoreLine(inn)}
+      </div>
+    </div>
+  );
 
   return (
     <div
-      className="bg-card w-full md:w-100 lg:w-72 h-72 flex flex-col justify-evenly rounded-lg shadow-md overflow-hidden cursor-pointer border-2 border-[#cc66ff]/40 hover:scale-105 hover:drop-shadow-[0_0_12px_rgba(204,102,255,0.5)] transition-all duration-300 px-4"
+      className="surface-card group w-full md:w-[340px] p-5 flex flex-col gap-4 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_44px_-20px_rgba(0,0,0,0.45)]"
       onClick={handleClick}
       role="button"
       tabIndex={0}
@@ -41,44 +59,58 @@ const LiveCard = ({ data }) => {
         }
       }}
     >
-      <div>
-        <p className="text-lg font-semibold font-space capitalize text-heading">
-          {data?.tournament_name}
-        </p>
-        <MapPin size={16} className="inline text-subheading" />{" "}
-        <span className="text-subheading text-sm font-normal mt-2">
-          {data?.venue}
+      {/* header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[15px] font-semibold font-space capitalize text-heading truncate">
+            {data?.tournament_name}
+          </p>
+          <p className="text-subheading text-[13px] mt-0.5 flex items-center gap-1 truncate">
+            <MapPin size={13} className="shrink-0" />
+            <span className="truncate">{data?.venue}</span>
+          </p>
+        </div>
+        <span className="flex items-center gap-1.5 text-rose-500 text-[11px] font-black tracking-[0.14em] shrink-0 pt-1">
+          <LiveDot />
+          LIVE
         </span>
       </div>
 
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <div className="text-heading font-bold text-xl">{data?.teamA}</div>
-          <div className="font-bold font-space text-xl text-heading">
-            {scoreLine(teamAinn)}
-          </div>
-        </div>
+      {/* teams + scores */}
+      <div className="space-y-3.5">
+        {teamRow(data?.teamA, teamAinn)}
+        {teamRow(data?.teamB, teamBinn)}
+      </div>
 
-        <div className="flex justify-between items-center">
-          <div className="text-heading font-bold text-xl">{data?.teamB}</div>
-          <div className="font-bold font-space text-xl text-heading">
-            {scoreLine(teamBinn)}
-          </div>
+      {/* this over */}
+      {thisOver.length > 0 && (
+        <div className="flex items-center flex-wrap gap-y-1 border-t card-border pt-3">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-secondary mr-1.5">
+            This over
+          </span>
+          {thisOver.map((s, i) => (
+            <TimelineItem key={i} result={s} />
+          ))}
         </div>
-        <div className="flex flex-row justify-between text-sm font-semibold text-subheading capitalize">
-          <div>CRR: {currentInn?.current_run_rate ?? "—"}</div>
-          <div>
-            {data?.toss?.wonBy
-              ? `${
-                  data.toss.wonBy === data?.teamA_id ? data?.teamA : data?.teamB
-                } chose to ${
-                  data.toss.decision === "ball"
-                    ? "field"
-                    : data.toss.decision || ""
-                }`
-              : ""}
-          </div>
-        </div>
+      )}
+
+      {/* meta */}
+      <div className="flex flex-row justify-between items-center gap-2 text-[13px] font-semibold text-subheading mt-auto">
+        <span className="tabular-nums">
+          CRR{" "}
+          <span className="text-heading font-space">
+            {currentInn?.current_run_rate ?? "—"}
+          </span>
+        </span>
+        {data?.toss?.wonBy && (
+          <span className="capitalize text-right truncate">
+            {data.toss.wonBy === data?.teamA_id ? data?.teamA : data?.teamB}{" "}
+            chose to{" "}
+            {data.toss.decision === "ball"
+              ? "field"
+              : data.toss.decision || ""}
+          </span>
+        )}
       </div>
     </div>
   );

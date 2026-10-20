@@ -1,4 +1,5 @@
 import { fmt2 } from "../lib/cricket";
+import TeamChip from "./TeamChip";
 
 /**
  * Full scorecard for one innings.
@@ -8,9 +9,12 @@ import { fmt2 } from "../lib/cricket";
 const Scorecard = ({ teamName, view }) => {
   if (!view) {
     return (
-      <div className="w-full bg-card border-2 border-[#cc66ff]/40 rounded-xl p-8 text-center">
-        <p className="text-xl text-heading font-bold">{teamName}</p>
-        <p className="text-subheading mt-2">Yet to bat</p>
+      <div className="w-full surface-card p-8 text-center">
+        <div className="flex justify-center">
+          <TeamChip name={teamName} size="lg" />
+        </div>
+        <p className="text-xl text-heading font-bold mt-3">{teamName}</p>
+        <p className="text-subheading mt-1.5">Yet to bat</p>
       </div>
     );
   }
@@ -19,19 +23,27 @@ const Scorecard = ({ teamName, view }) => {
   const strikerId = view.strikerId ? String(view.strikerId) : null;
 
   return (
-    <div className="w-full bg-card border-2 border-[#cc66ff]/40 rounded-xl">
+    <div className="w-full surface-card overflow-hidden">
       {/* heading */}
-      <div className="w-full text-2xl text-heading px-6 py-3 font-bold">
-        {teamName}
-        <span className="float-right font-space text-xl">
-          {view.runs}/{view.wickets} ({view.oversText})
+      <div className="w-full px-5 py-4 flex items-center justify-between gap-3 border-b card-border">
+        <span className="flex items-center gap-3 min-w-0">
+          <TeamChip name={teamName} size="md" />
+          <span className="text-xl text-heading font-bold truncate">
+            {teamName}
+          </span>
+        </span>
+        <span className="font-space font-bold text-xl text-heading tabular-nums shrink-0">
+          {view.runs}/{view.wickets}{" "}
+          <span className="text-sm text-subheading font-semibold">
+            ({view.oversText})
+          </span>
         </span>
       </div>
 
       {/* batting table  */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] mt-2 border-b-4 border-secondary">
-          <thead className="text-heading text-left">
+        <table className="w-full min-w-[560px] mt-2 border-b card-border tabular-nums">
+          <thead className="text-heading text-left text-xs uppercase tracking-wider">
             <tr>
               <th className="px-6">Batting</th>
               <th>&nbsp;</th>
@@ -54,30 +66,30 @@ const Scorecard = ({ teamName, view }) => {
               const isStriker = strikerId && String(s.id) === strikerId;
               return (
                 <tr key={s.id || i} className={s.batting ? "font-medium" : ""}>
-                  <td className="px-6 py-3 border-b-2 border-secondary text-heading">
+                  <td className="px-6 py-3 border-b card-border text-heading">
                     {s.name}
                     {isStriker ? " *" : ""}
                   </td>
-                  <td className="p-2 border-b-2 border-secondary">
+                  <td className="p-2 border-b card-border">
                     {s.batting
                       ? "not out"
                       : s.status === "retired hurt"
                         ? "retired hurt"
                         : s.howOut}
                   </td>
-                  <td className="p-2 border-b-2 border-secondary font-space">
+                  <td className="p-2 border-b card-border font-space">
                     {s.runs}
                   </td>
-                  <td className="p-2 border-b-2 border-secondary font-space">
+                  <td className="p-2 border-b card-border font-space">
                     {s.balls}
                   </td>
-                  <td className="p-2 border-b-2 border-secondary font-space">
+                  <td className="p-2 border-b card-border font-space">
                     {s.fours}
                   </td>
-                  <td className="p-2 border-b-2 border-secondary font-space">
+                  <td className="p-2 border-b card-border font-space">
                     {s.sixes}
                   </td>
-                  <td className="p-2 border-b-2 border-secondary font-space">
+                  <td className="p-2 border-b card-border font-space">
                     {fmt2(s.sr)}
                   </td>
                 </tr>
@@ -105,7 +117,7 @@ const Scorecard = ({ teamName, view }) => {
 
       {/* fall of wickets  */}
       {fallOfWickets.length > 0 && (
-        <div className="px-6 py-4 border-b-4 border-secondary">
+        <div className="px-6 py-4 border-b card-border">
           <p className="text-heading font-bold mb-2">Fall of Wickets</p>
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-subheading">
             {fallOfWickets.map((f, i) => (
@@ -122,8 +134,8 @@ const Scorecard = ({ teamName, view }) => {
 
       {/* bowling table  */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] mt-4">
-          <thead className="text-heading text-left">
+        <table className="w-full min-w-[560px] mt-4 tabular-nums">
+          <thead className="text-heading text-left text-xs uppercase tracking-wider">
             <tr>
               <th className="px-6">Bowling</th>
               <th>O</th>
@@ -145,28 +157,28 @@ const Scorecard = ({ teamName, view }) => {
             )}
             {bowlers.map((s, i) => (
               <tr key={s.id || i}>
-                <td className="px-6 py-2 border-b-2 border-secondary text-heading">
+                <td className="px-6 py-2 border-b card-border text-heading">
                   {s.name}
                 </td>
-                <td className="p-2 border-b-2 border-secondary font-space">
+                <td className="p-2 border-b card-border font-space">
                   {s.oversText}
                 </td>
-                <td className="p-2 border-b-2 border-secondary font-space">
+                <td className="p-2 border-b card-border font-space">
                   {s.maidens}
                 </td>
-                <td className="p-2 border-b-2 border-secondary font-space">
+                <td className="p-2 border-b card-border font-space">
                   {s.runsConceded}
                 </td>
-                <td className="p-2 border-b-2 border-secondary font-space">
+                <td className="p-2 border-b card-border font-space">
                   {s.wickets}
                 </td>
-                <td className="p-2 border-b-2 border-secondary font-space">
+                <td className="p-2 border-b card-border font-space">
                   {fmt2(s.economy)}
                 </td>
-                <td className="p-2 border-b-2 border-secondary font-space">
+                <td className="p-2 border-b card-border font-space">
                   {s.noBall}
                 </td>
-                <td className="p-2 border-b-2 border-secondary font-space">
+                <td className="p-2 border-b card-border font-space">
                   {s.wide}
                 </td>
               </tr>

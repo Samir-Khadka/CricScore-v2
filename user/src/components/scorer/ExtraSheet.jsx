@@ -10,7 +10,7 @@ export default function ExtraSheet({ open, title, groups = [], onChoose, onClose
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[3px] animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -18,7 +18,7 @@ export default function ExtraSheet({ open, title, groups = [], onChoose, onClose
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative w-full sm:max-w-lg max-h-[82vh] overflow-y-auto bg-card rounded-t-2xl sm:rounded-2xl border-2 card-border shadow-xl p-4"
+        className="relative w-full sm:max-w-lg max-h-[82vh] overflow-y-auto bg-card rounded-t-2xl sm:rounded-2xl ring-1 ring-black/10 dark:ring-white/10 shadow-2xl animate-slide-up p-4"
       >
         <div className="flex items-start justify-between mb-3">
           <p className="text-lg font-space font-bold text-heading">{title}</p>

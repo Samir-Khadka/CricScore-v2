@@ -22,7 +22,8 @@ Ball-by-ball scoring, live scorecards, points tables with NRR — built for gras
 
 - **Scorer console** (mobile-first) — big-tap ball pad (0/1/2/3/4/6, wide, no-ball, bye, leg-bye), full wicket flows with fielder credits, batsman/bowler pickers that enforce the laws (no consecutive overs, over limits, dismissed players can't return), free-hit tracking, and **exact undo** of any ball.
 - **Live viewer** — real-time score header with this-over strip, CRR/RRR and projected score, full scorecards, fall of wickets, Manhattan chart, ball-by-ball commentary, all pushed over WebSocket.
-- **Tournaments** — fixtures, results, and a points table with net run rate (standard all-out adjustment).
+- **Match analytics the big sites are known for** — a live **win predictor** (win % during every chase), **worm graph** (cumulative runs with wicket markers), **partnerships** for every stand, and **milestones** (team 100 up, a batter's fifty, a 100 stand) surfaced in the commentary feed.
+- **Tournaments** — fixtures, results, a points table with net run rate (standard all-out adjustment) and last-5 **form**, plus **leaderboards**: most runs (Orange Cap), most wickets (Purple Cap), 50s/100s, best bowling figures, averages and strike rates.
 
 ## The scoring engine
 
@@ -37,9 +38,10 @@ re-fold. It implements real cricket law:
 - free hits after no-balls (bowled/caught/lbw etc. rejected on a free hit)
 - bowler wicket credit done properly (run outs excluded), maidens, economy and strike rates on fractional overs
 - retired hurt (not a wicket, may return), bowler max-overs and consecutive-over rules
+- physically impossible dismissals rejected (no bowled off a wide, no stumped off a no-ball)
 - innings completion by wickets, overs, or a chased target; match results with margins
 
-Covered by 20 unit tests: `cd server && npm test`.
+Covered by 24 unit tests: `cd server && npm test`.
 
 ## Architecture
 
@@ -52,9 +54,13 @@ user/     React 19 + Vite + Tailwind 4 — viewer AND scorer console in one app
 docs/     the code reviews that drove the rebuild
 ```
 
-**Security:** scoring endpoints require a logged-in scorer, and only the
-scorer who created a match can score it. JWTs are signed with an
-env-provided secret with expiry; the session cookie is httpOnly.
+**Security & robustness:** scoring endpoints require a logged-in scorer,
+and only the scorer who created a match can score it. JWTs are signed
+with an env-provided secret with expiry; the session cookie is httpOnly.
+Every scoring tap carries an idempotency key (double-taps count once) and
+a sequence check (a second scorer on a stale screen gets a 409 and a
+refresh, never a silently interleaved log). The API ships with helmet
+headers and rate limits.
 
 ## Run it
 

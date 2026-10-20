@@ -1,10 +1,40 @@
 import { Spinner, ErrorBox, EmptyBox } from "./States";
+import TeamChip from "./TeamChip";
 
 /**
  * League standings table.
  * Props: { rows, loading, error, onRetry }
- * rows: [{ team, played, won, lost, tied, points, nrr }]
+ * rows: [{ team, played, won, lost, tied, points, nrr, form }]
+ * form: ["W" | "L" | "T"] with the most recent result last.
  */
+const FORM_STYLES = {
+  W: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-emerald-500/30",
+  L: "bg-rose-500/15 text-rose-600 dark:text-rose-400 ring-rose-500/30",
+  T: "bg-slate-500/15 text-slate-600 dark:text-slate-300 ring-slate-500/30",
+};
+
+const FormChips = ({ form }) => {
+  if (!Array.isArray(form) || form.length === 0) {
+    return <span className="text-secondary">—</span>;
+  }
+  return (
+    <span className="inline-flex items-center gap-1">
+      {form.map((f, i) => (
+        <span
+          key={i}
+          title={
+            f === "W" ? "Won" : f === "L" ? "Lost" : "Tied / no result"
+          }
+          className={`inline-flex h-5 w-5 items-center justify-center rounded-md text-[10px] font-black ring-1 ${
+            FORM_STYLES[f] || FORM_STYLES.T
+          }`}
+        >
+          {f}
+        </span>
+      ))}
+    </span>
+  );
+};
 const PointsTable = ({ rows, loading, error, onRetry }) => {
   if (loading) return <Spinner label="Loading points table…" />;
   if (error) return <ErrorBox message={error} onRetry={onRetry} />;
@@ -13,7 +43,7 @@ const PointsTable = ({ rows, loading, error, onRetry }) => {
 
   return (
     <div className="mt-2 overflow-x-auto">
-      <table className="w-full min-w-[520px] text-left">
+      <table className="w-full min-w-[660px] text-left tabular-nums">
         <thead className="text-heading">
           <tr className="border-b-2 border-secondary">
             <th className="px-4 py-3">#</th>
@@ -24,6 +54,7 @@ const PointsTable = ({ rows, loading, error, onRetry }) => {
             <th className="px-4 py-3 text-center">T</th>
             <th className="px-4 py-3 text-center">Pts</th>
             <th className="px-4 py-3 text-center">NRR</th>
+            <th className="px-4 py-3">Form</th>
           </tr>
         </thead>
         <tbody className="text-subheading">
@@ -34,7 +65,10 @@ const PointsTable = ({ rows, loading, error, onRetry }) => {
             >
               <td className="px-4 py-3 font-space">{i + 1}</td>
               <td className="px-4 py-3 font-semibold text-heading">
-                {r.team}
+                <span className="flex items-center gap-2.5">
+                  <TeamChip name={r.team} size="sm" />
+                  {r.team}
+                </span>
               </td>
               <td className="px-4 py-3 text-center font-space">{r.played}</td>
               <td className="px-4 py-3 text-center font-space">{r.won}</td>
@@ -49,6 +83,9 @@ const PointsTable = ({ rows, loading, error, onRetry }) => {
                     ? `+${r.nrr.toFixed(3)}`
                     : r.nrr.toFixed(3)
                   : "—"}
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap">
+                <FormChips form={r.form} />
               </td>
             </tr>
           ))}

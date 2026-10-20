@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Calendar, Clock, LogOut, MapPin, Play } from "lucide-react";
 import { ErrorBox, Spinner } from "../components/States";
+import LiveDot from "../components/LiveDot";
 import { api, clearScorer, getScorerId, unwrap } from "../lib/api";
 
 const ScorerMatches = () => {
@@ -47,7 +48,7 @@ const ScorerMatches = () => {
     if (s === "live")
       return (
         <span className="text-rose-500 font-bold uppercase text-xs flex items-center gap-1.5">
-          <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+          <LiveDot />
           Live
         </span>
       );
@@ -92,7 +93,7 @@ const ScorerMatches = () => {
       ) : error ? (
         <ErrorBox message={error} onRetry={() => load()} />
       ) : matches.length === 0 ? (
-        <div className="mt-10 bg-card border-2 card-border rounded-xl p-8 text-center">
+        <div className="mt-10 surface-card p-8 text-center">
           <p className="text-heading font-semibold">No matches yet</p>
           <p className="text-subheading text-sm mt-2">
             Matches you create in CricScore will appear here for scoring.
@@ -103,7 +104,7 @@ const ScorerMatches = () => {
           {matches.map((m) => (
             <div
               key={m._id}
-              className="bg-card border-2 border-[#cc66ff]/40 rounded-xl p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4 shadow-md"
+              className="surface-card p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4 transition-all duration-300 hover:-translate-y-0.5"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3 flex-wrap">
@@ -144,7 +145,7 @@ const ScorerMatches = () => {
                 </Link>
                 <Link
                   to={`/score/${m._id}`}
-                  className="px-5 min-h-12 flex items-center gap-2 rounded-xl font-bold text-black bg-gradient-to-r from-[#cc66ff] to-[#00dbde]"
+                  className="px-5 min-h-12 flex items-center gap-2 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635]"
                 >
                   <Play size={16} /> Score
                 </Link>

@@ -59,12 +59,19 @@ const BallEventsSchema = new Schema(
       playerOut: String,
     },
     commentary: { type: String, default: "" },
+    // Client-generated id per scoring tap: retries/double-taps with the
+    // same id are applied once (idempotency).
+    clientEventId: { type: String, default: null },
     voided: { type: Boolean, default: false }, // undone balls stay for audit
   },
   { timestamps: true }
 );
 
 BallEventsSchema.index({ inning: 1, sequence: 1 });
+BallEventsSchema.index(
+  { inning: 1, clientEventId: 1 },
+  { unique: true, partialFilterExpression: { clientEventId: { $type: "string" }, voided: false } }
+);
 
 const BallEvents = model("ballEvents", BallEventsSchema);
 module.exports = BallEvents;

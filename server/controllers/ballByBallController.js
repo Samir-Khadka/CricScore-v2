@@ -26,10 +26,11 @@ async function handleBallByBall(req, res) {
     );
     emitLive(req, req.params.matchId);
     return res.status(200).json({
-      message: "Updated",
+      message: result.duplicate ? "Already recorded" : "Updated",
       data: result.inning,
       state: result.state,
       ballEvent: result.ballEvent,
+      ...(result.duplicate ? { duplicate: true } : {}),
       ...(result.result ? { result: result.result } : {}),
     });
   } catch (error) {

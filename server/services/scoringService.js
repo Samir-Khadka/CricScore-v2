@@ -144,6 +144,9 @@ function toEngineEvents(docs) {
 }
 
 async function getMatchAndInnings(matchId, inningNumber) {
+  if (!mongoose.Types.ObjectId.isValid(matchId)) {
+    throw httpError(400, "Invalid match id");
+  }
   const match = await Match.findById(matchId).populate("tournament_id", "format");
   if (!match) throw httpError(404, "Match not found");
   const inning = await Innings.findOne({ matchId, inningNumber });
@@ -284,9 +287,42 @@ async function postBall(matchId, inningNumber, rawBody, scorerId) {
   const ev = normalizeEvent(rawBody);
 
   const count = await BallEvents.countDocuments({ inning: inning._id, voided: false });
+
+  // Idempotency: a retried/double-tapped submission carries the same
+  // clientEventId — return the current state instead of counting it twice.
+  if (rawBody.clientEventId) {
+    const existing = await BallEvents.findOne({
+      inning: inning._id,
+      clientEventId: String(rawBody.clientEventId),
+      voided: false,
+    });
+    if (existing) {
+      const state = computeInningsState(toEngineEvents(await loadEvents(inning._id)), {
+        totalOvers,
+        target: inning.target || null,
+        playerNames: names,
+      });
+      return { match, inning, state, ballEvent: existing, duplicate: true };
+    }
+  }
+
+  // Optimistic concurrency: the scorer's screen was based on
+  // expectedSequence balls; if someone else scored meanwhile, refuse
+  // rather than silently interleaving two scorers' balls.
+  if (
+    typeof rawBody.expectedSequence === "number" &&
+    rawBody.expectedSequence !== count
+  ) {
+    throw httpError(
+      409,
+      `Score has moved on (expected ${rawBody.expectedSequence} balls, found ${count}). Refresh and retry.`
+    );
+  }
+
   const doc = await BallEvents.create({
     inning: inning._id,
     sequence: count + 1,
+    clientEventId: rawBody.clientEventId ? String(rawBody.clientEventId) : null,
     striker: oid(ev.striker),
     nonStriker: oid(ev.nonStriker),
     bowler: oid(ev.bowler),

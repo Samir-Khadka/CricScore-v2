@@ -6,15 +6,17 @@ import { ballChipClass } from "../lib/cricket";
  */
 const Commentary = ({ label, text, symbol }) => {
   return (
-    <div className="w-full bg-card p-3 border-2 rounded-lg card-border mb-4">
+    <div className="w-full bg-card ring-1 ring-black/5 dark:ring-white/10 rounded-xl px-3.5 py-3 mb-2.5 shadow-sm">
       <div className="flex flex-row items-start gap-3">
-        <p className="bg-green-500/40 text-center px-3 py-1 rounded-lg font-space font-semibold text-heading shrink-0 min-w-14">
+        <p className="bg-secondary text-subheading text-center px-2.5 py-1 rounded-lg font-space text-xs font-bold tabular-nums shrink-0 min-w-12 mt-0.5">
           {label}
         </p>
-        <p className="px-1 py-1 text-heading flex-1">{text}</p>
+        <p className="py-0.5 text-heading flex-1 text-[15px] leading-snug">
+          {text}
+        </p>
         {symbol !== undefined && symbol !== null && symbol !== "" && (
           <p
-            className={`px-3 py-1 rounded-lg font-space font-semibold text-center shrink-0 border ${ballChipClass(
+            className={`h-8 min-w-8 px-1.5 rounded-full font-space text-xs font-bold inline-flex items-center justify-center shrink-0 border shadow-sm ${ballChipClass(
               symbol
             )}`}
           >

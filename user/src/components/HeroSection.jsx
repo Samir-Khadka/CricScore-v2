@@ -8,7 +8,7 @@ const HeroSection = () => {
         <p className="text-2xl">
           Bring your Local Cricket Tournament Online with
         </p>
-        <p className="text-5xl md:text-7xl mt-8 font-black heading-gradient drop-shadow-[0_0_20px_rgba(204,102,255,0.9)]">
+        <p className="text-5xl md:text-7xl mt-8 font-black heading-gradient drop-shadow-[0_0_20px_rgba(16,185,129,0.35)]">
           CricScore
         </p>
         <p className="text-base mt-8 font-inter text-subheading">
@@ -20,7 +20,7 @@ const HeroSection = () => {
         {/* cta button  */}
         <Link
           to={getScorerId() ? "/score" : "/login"}
-          className="inline-block text-black mt-10 w-fit md:w-60 p-3 rounded-xl text-lg font-bold bg-gradient-to-r from-[#cc66ff] to-[#00dbde] cursor-pointer hover:drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all duration-300"
+          className="inline-block text-black mt-10 w-fit md:w-60 p-3 rounded-xl text-lg font-bold bg-gradient-to-r from-[#10b981] to-[#a3e635] cursor-pointer hover:drop-shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all duration-300"
         >
           Start Scoring
         </Link>

@@ -5,6 +5,7 @@ import Tournaments from "../components/TournamentsCard";
 import HeroSection from "../components/HeroSection";
 import Features from "../components/Features";
 import LiveCard from "../components/ScoreSummaryCard";
+import LiveDot from "../components/LiveDot";
 import UpcomingCard from "../components/Upcoming";
 import Recent from "../components/Recent";
 import { ErrorBox, SkeletonCard } from "../components/States";
@@ -23,7 +24,7 @@ function SectionHeader({ icon, title, subtitle, onViewAll }) {
       {onViewAll && (
         <button
           type="button"
-          className="text-sm font-semibold text-secondary cursor-pointer p-2 rounded-xl hover:text-[#cc66ff] transition-all shrink-0"
+          className="text-sm font-semibold text-secondary cursor-pointer p-2 rounded-xl hover:text-[#10b981] transition-all shrink-0"
           onClick={onViewAll}
         >
           View All <MoveRight className="inline-block" size={16} />
@@ -120,9 +121,7 @@ const Home = () => {
       {/* Live Matches */}
       <div className="mt-6">
         <SectionHeader
-          icon={
-            <span className="inline-block animate-pulse w-4 h-4 bg-rose-500 rounded-full mr-2 align-middle" />
-          }
+          icon={<LiveDot className="mr-2.5 -translate-y-0.5" />}
           title="Live Matches"
           subtitle="Happening now in CricScore."
           onViewAll={() => handleViewAll("live")}
@@ -201,7 +200,7 @@ const Home = () => {
       <div className="mt-16">
         <SectionHeader
           icon={
-            <Trophy size={20} className="inline-block mr-2 text-[#cc66ff] align-middle" />
+            <Trophy size={20} className="inline-block mr-2 text-[#10b981] align-middle" />
           }
           title="Tournaments"
           subtitle="Follow your favorite."

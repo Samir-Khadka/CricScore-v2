@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { Award, CalendarRange } from "lucide-react";
+import { Award, BarChart3, CalendarRange } from "lucide-react";
 import ScheduleCard from "../components/ScheduleCard";
 import PointsTable from "../components/PointsTable";
+import TournamentStats from "../components/TournamentStats";
 import { ErrorBox, Spinner } from "../components/States";
 import { api, unwrap } from "../lib/api";
 
@@ -14,12 +15,14 @@ const TournamentInfo = () => {
   );
   const [schedule, setSchedule] = useState(null);
   const [points, setPoints] = useState(null);
+  const [stats, setStats] = useState(null);
   const [tab, setTab] = useState("fixtures");
   const [loadingList, setLoadingList] = useState(!tournaments);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [error, setError] = useState(null);
   const [detailError, setDetailError] = useState(null);
   const [pointsError, setPointsError] = useState(null);
+  const [statsError, setStatsError] = useState(null);
 
   // Resolve the tournament from the URL param (name slug or id).
   const tournament = useMemo(() => {
@@ -61,6 +64,7 @@ const TournamentInfo = () => {
       setLoadingDetail(true);
       setDetailError(null);
       setPointsError(null);
+      setStatsError(null);
       try {
         const res = await api.get(`/view/tournaments/${id}`, { signal });
         setSchedule(unwrap(res) || []);
@@ -74,6 +78,14 @@ const TournamentInfo = () => {
         setPoints(unwrap(res) || []);
       } catch (err) {
         if (err?.name !== "AbortError") setPointsError(err.message);
+      }
+      try {
+        const res = await api.get(`/view/tournaments/${id}/stats`, {
+          signal,
+        });
+        setStats(unwrap(res) || null);
+      } catch (err) {
+        if (err?.name !== "AbortError") setStatsError(err.message);
       } finally {
         setLoadingDetail(false);
       }
@@ -86,6 +98,7 @@ const TournamentInfo = () => {
     const ctrl = new AbortController();
     setSchedule(null);
     setPoints(null);
+    setStats(null);
     loadDetail(tournament._id, ctrl.signal);
     return () => ctrl.abort();
   }, [tournament?._id, loadDetail]);
@@ -139,16 +152,16 @@ const TournamentInfo = () => {
       <div
         role="tablist"
         aria-label="Tournament sections"
-        className="mt-8 flex flex-row gap-2"
+        className="mt-8 inline-flex flex-row gap-1 p-1.5 rounded-2xl bg-secondary/50 ring-1 ring-black/5 dark:ring-white/10"
       >
         <button
           role="tab"
           aria-selected={tab === "fixtures"}
           onClick={() => setTab("fixtures")}
-          className={`px-5 py-2.5 rounded-xl font-semibold cursor-pointer flex items-center gap-2 ${
+          className={`px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all duration-200 ${
             tab === "fixtures"
-              ? "bg-[#af14fd] text-slate-100"
-              : "bg-card text-heading border-2 card-border"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+              : "text-subheading hover:text-heading hover:bg-card/70"
           }`}
         >
           <CalendarRange size={16} /> Fixtures
@@ -157,13 +170,25 @@ const TournamentInfo = () => {
           role="tab"
           aria-selected={tab === "points"}
           onClick={() => setTab("points")}
-          className={`px-5 py-2.5 rounded-xl font-semibold cursor-pointer flex items-center gap-2 ${
+          className={`px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all duration-200 ${
             tab === "points"
-              ? "bg-[#af14fd] text-slate-100"
-              : "bg-card text-heading border-2 card-border"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+              : "text-subheading hover:text-heading hover:bg-card/70"
           }`}
         >
           <Award size={16} /> Points Table
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab === "stats"}
+          onClick={() => setTab("stats")}
+          className={`px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all duration-200 ${
+            tab === "stats"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+              : "text-subheading hover:text-heading hover:bg-card/70"
+          }`}
+        >
+          <BarChart3 size={16} /> Stats
         </button>
       </div>
 
@@ -193,12 +218,22 @@ const TournamentInfo = () => {
             </div>
           )}
         </div>
-      ) : (
-        <div className="mt-6 bg-card border-2 card-border rounded-xl p-2 md:p-4">
+      ) : tab === "points" ? (
+        <div className="mt-6 surface-card p-2 md:p-4">
           <PointsTable
             rows={points}
             loading={loadingDetail && points === null}
             error={pointsError}
+            onRetry={() => loadDetail(t._id)}
+          />
+        </div>
+      ) : (
+        <div className="mt-6">
+          <TournamentStats
+            batting={stats?.batting}
+            bowling={stats?.bowling}
+            loading={loadingDetail && stats === null}
+            error={statsError}
             onRetry={() => loadDetail(t._id)}
           />
         </div>

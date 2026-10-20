@@ -70,7 +70,7 @@ export default function WicketModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[3px] animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -78,7 +78,7 @@ export default function WicketModal({
         role="dialog"
         aria-modal="true"
         aria-label="Record a wicket"
-        className="relative w-full sm:max-w-lg max-h-[88vh] overflow-y-auto bg-card rounded-t-2xl sm:rounded-2xl border-2 card-border shadow-xl p-4"
+        className="relative w-full sm:max-w-lg max-h-[88vh] overflow-y-auto bg-card rounded-t-2xl sm:rounded-2xl ring-1 ring-black/10 dark:ring-white/10 shadow-2xl animate-slide-up p-4"
       >
         <div className="flex items-start justify-between mb-3">
           <p className="text-lg font-space font-bold text-red-500">
@@ -177,7 +177,7 @@ export default function WicketModal({
                     aria-pressed={active}
                     className={`min-h-11 px-3 rounded-full border-2 text-sm font-semibold cursor-pointer ${
                       active
-                        ? "border-[#cc66ff] bg-[#cc66ff]/15 text-heading"
+                        ? "border-[#10b981] bg-[#10b981]/15 text-heading"
                         : "border-secondary bg-secondary/40 text-subheading"
                     }`}
                   >
