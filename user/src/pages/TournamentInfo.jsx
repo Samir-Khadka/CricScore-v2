@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { Award, BarChart3, CalendarRange } from "lucide-react";
+import { Award, BarChart3, CalendarRange, MapPin } from "lucide-react";
 import ScheduleCard from "../components/ScheduleCard";
 import PointsTable from "../components/PointsTable";
 import TournamentStats from "../components/TournamentStats";
@@ -136,17 +136,70 @@ const TournamentInfo = () => {
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
-      <p className="text-2xl font-bold text-heading font-space">
-        {t.tournament_name}
-      </p>
-      {t.description && (
-        <p className="text-sm text-subheading mt-1">{t.description}</p>
-      )}
-      <p className="text-subheading mt-1">
-        {t.start_date ? new Date(t.start_date).toDateString() : ""} -{" "}
-        {t.end_date ? new Date(t.end_date).toDateString() : ""}
-      </p>
-      {t.venue && <p className="text-subheading">{t.venue}</p>}
+      {/* banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950 via-emerald-900 to-zinc-900 px-6 sm:px-8 py-7 shadow-xl shadow-emerald-950/20">
+        <svg
+          aria-hidden="true"
+          className="absolute -right-8 -top-14 h-60 w-60 text-emerald-400/15"
+          viewBox="0 0 48 48"
+          fill="none"
+        >
+          <circle cx="24" cy="24" r="21" stroke="currentColor" strokeWidth="1.6" />
+          <path
+            d="M16.8 4.2c-4.6 6-4.6 13.6 0 19.8 4.6 6.2 4.6 13.8 0 19.8"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeDasharray="3.4 2.9"
+          />
+          <path
+            d="M31.2 4.2c4.6 6 4.6 13.6 0 19.8-4.6 6.2-4.6 13.8 0 19.8"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeDasharray="3.4 2.9"
+          />
+        </svg>
+        <div
+          aria-hidden="true"
+          className="absolute -left-16 -bottom-24 h-56 w-56 rounded-full bg-lime-400/10 blur-3xl"
+        />
+        <div className="relative">
+          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-300">
+            Tournament
+          </p>
+          <h1 className="mt-2 font-condensed font-bold uppercase tracking-wide text-white text-4xl sm:text-[52px] leading-[0.95]">
+            {t.tournament_name}
+          </h1>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {(t.start_date || t.end_date) && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 ring-1 ring-white/15 text-emerald-50 text-[12.5px] font-semibold px-3 py-1.5">
+                <CalendarRange size={13} />
+                {t.start_date ? new Date(t.start_date).toDateString() : ""}
+                {t.end_date
+                  ? ` — ${new Date(t.end_date).toDateString()}`
+                  : ""}
+              </span>
+            )}
+            {t.venue && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 ring-1 ring-white/15 text-emerald-50 text-[12.5px] font-semibold px-3 py-1.5">
+                <MapPin size={13} />
+                {t.venue}
+              </span>
+            )}
+            {t.format && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 ring-1 ring-white/15 text-emerald-50 text-[12.5px] font-semibold px-3 py-1.5">
+                {t.format} overs
+              </span>
+            )}
+          </div>
+          {t.description && (
+            <p className="mt-3.5 text-[14px] leading-relaxed text-emerald-100/75 max-w-2xl">
+              {t.description}
+            </p>
+          )}
+        </div>
+      </div>
 
       {/* tabs */}
       <div

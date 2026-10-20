@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Menu, Moon, Sun, X, Zap } from "lucide-react";
+import { Menu, Moon, Sun, X } from "lucide-react";
 import { useThemeSwitch } from "../context/color-mode";
 import { getScorerId } from "../lib/api";
+import Logo from "./Logo";
 
 const linkClass = ({ isActive }) =>
   `px-3.5 py-2 rounded-full text-sm transition-all duration-200 ${
@@ -41,16 +42,11 @@ const NavBar = () => {
   const logo = (
     <Link
       to="/"
-      className="flex items-center gap-2.5 shrink-0"
+      className="flex items-center shrink-0"
       onClick={closeMenu}
       aria-label="CricScore home"
     >
-      <span className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-lime-400 grid place-items-center text-slate-950 shadow-lg shadow-emerald-500/30 ring-1 ring-white/20">
-        <Zap size={19} strokeWidth={2.75} fill="currentColor" />
-      </span>
-      <span className="text-[22px] leading-none font-space font-bold tracking-tight text-heading">
-        Cric<span className="text-emerald-500">Score</span>
-      </span>
+      <Logo size={36} />
     </Link>
   );
 

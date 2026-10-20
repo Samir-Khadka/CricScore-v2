@@ -1,9 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, ClockFading, MoveRight, Trophy } from "lucide-react";
+import {
+  BarChart3,
+  Calendar,
+  ClockFading,
+  MoveRight,
+  Sparkles,
+  Trophy,
+} from "lucide-react";
 import Tournaments from "../components/TournamentsCard";
 import HeroSection from "../components/HeroSection";
 import Features from "../components/Features";
+import HowItWorks from "../components/HowItWorks";
+import LiveTicker from "../components/LiveTicker";
+import TournamentSpotlight from "../components/TournamentSpotlight";
 import LiveCard from "../components/ScoreSummaryCard";
 import LiveDot from "../components/LiveDot";
 import UpcomingCard from "../components/Upcoming";
@@ -11,15 +21,30 @@ import Recent from "../components/Recent";
 import { ErrorBox, SkeletonCard } from "../components/States";
 import { api, homeSocket, unwrap } from "../lib/api";
 
-function SectionHeader({ icon, title, subtitle, onViewAll }) {
+function SectionHeader({ icon, title, subtitle, onViewAll, count }) {
   return (
-    <div className="flex flex-row justify-between items-start gap-2">
-      <div className="text-2xl text-heading font-space font-semibold tracking-wide">
-        {icon}
-        <span>{title}</span>
-        <p className="text-sm text-subheading ml-8 mt-1 font-normal font-inter">
-          {subtitle}
-        </p>
+    <div className="flex flex-row justify-between items-end gap-3">
+      <div>
+        <div className="flex items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            className="h-6 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-lime-500 shrink-0"
+          />
+          <h2 className="font-condensed font-semibold uppercase tracking-wide text-[26px] leading-none text-heading flex items-center">
+            {icon}
+            {title}
+          </h2>
+          {count != null && count > 0 && (
+            <span className="font-space tabular-nums text-[11px] font-bold bg-secondary/70 text-subheading rounded-full px-2 py-0.5 ring-1 ring-black/5 dark:ring-white/10">
+              {count}
+            </span>
+          )}
+        </div>
+        {subtitle && (
+          <p className="text-[13px] text-subheading mt-1.5 ml-3.5 font-inter">
+            {subtitle}
+          </p>
+        )}
       </div>
       {onViewAll && (
         <button
@@ -37,7 +62,7 @@ function SectionHeader({ icon, title, subtitle, onViewAll }) {
 function MatchGrid({ loading, error, onRetry, items, render, emptyText }) {
   if (loading) {
     return (
-      <div className="flex flex-row flex-wrap gap-6 justify-evenly items-center mt-5">
+      <div className="flex flex-row flex-wrap gap-5 justify-center lg:justify-start mt-5">
         <SkeletonCard />
         <SkeletonCard />
         <SkeletonCard />
@@ -46,10 +71,10 @@ function MatchGrid({ loading, error, onRetry, items, render, emptyText }) {
   }
   if (error) return <ErrorBox message={error} onRetry={onRetry} />;
   if (!items || items.length === 0) {
-    return <p className="text-subheading mt-5 px-2">{emptyText}</p>;
+    return <p className="text-subheading mt-5 px-1">{emptyText}</p>;
   }
   return (
-    <div className="flex flex-row flex-wrap gap-6 justify-evenly items-center mt-5">
+    <div className="flex flex-row flex-wrap gap-5 justify-center lg:justify-start mt-5">
       {items.map(render)}
     </div>
   );
@@ -114,110 +139,207 @@ const Home = () => {
     };
   }, []);
 
+  /* ------------------------- hero feature ------------------------- */
+  const featuredVariant = liveMatches.length > 0 ? "live" : "recent";
+  const featuredMatch = liveMatches[0] || recentMatches[0] || null;
+  const [featuredDetail, setFeaturedDetail] = useState(null);
+
+  // Refetch the featured match's detail (engine state → win meter,
+  // this-over) whenever its score signature moves.
+  const featuredSig = useMemo(() => {
+    if (!featuredMatch) return "";
+    const runs = (featuredMatch.innings || []).reduce(
+      (a, i) => a + (i?.runs || 0) * 100 + (i?.wickets || 0),
+      0
+    );
+    return `${featuredMatch._id}|${runs}`;
+  }, [featuredMatch]);
+
+  useEffect(() => {
+    if (!featuredMatch?._id) {
+      setFeaturedDetail(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    api
+      .get(`/view/matches/${featuredMatch._id}`, { signal: ctrl.signal })
+      .then((res) => setFeaturedDetail(unwrap(res)))
+      .catch(() => {});
+    return () => ctrl.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [featuredSig]);
+
+  /* ----------------------- tournament spotlight -------------------- */
+  const spotlightTournament = tournaments[0] || null;
+  const [spotPoints, setSpotPoints] = useState(null);
+  const [spotStats, setSpotStats] = useState(null);
+  const [spotLoading, setSpotLoading] = useState(false);
+
+  useEffect(() => {
+    if (!spotlightTournament?._id) return;
+    const ctrl = new AbortController();
+    setSpotPoints(null);
+    setSpotStats(null);
+    setSpotLoading(true);
+    const done = () => {
+      if (!ctrl.signal.aborted) setSpotLoading(false);
+    };
+    api
+      .get(`/view/tournaments/${spotlightTournament._id}/points-table`, {
+        signal: ctrl.signal,
+      })
+      .then((res) => setSpotPoints(unwrap(res) || []))
+      .catch(() => {})
+      .finally(done);
+    api
+      .get(`/view/tournaments/${spotlightTournament._id}/stats`, {
+        signal: ctrl.signal,
+      })
+      .then((res) => setSpotStats(unwrap(res) || null))
+      .catch(() => {})
+      .finally(done);
+    return () => ctrl.abort();
+  }, [spotlightTournament?._id]);
+
   const handleViewAll = (type) => navigate(`/matches/${type}`);
 
   return (
-    <section className="px-4 md:px-10 py-6 min-h-screen max-w-[1400px] mx-auto">
-      {/* Live Matches */}
-      <div className="mt-6">
-        <SectionHeader
-          icon={<LiveDot className="mr-2.5 -translate-y-0.5" />}
-          title="Live Matches"
-          subtitle="Happening now in CricScore."
-          onViewAll={() => handleViewAll("live")}
+    <>
+      <LiveTicker matches={liveMatches} />
+      <section className="px-4 md:px-10 pb-10 min-h-screen max-w-[1400px] mx-auto w-full">
+        {/* hero */}
+        <HeroSection
+          featuredMatch={featuredMatch}
+          featuredDetail={featuredDetail}
+          featuredVariant={featuredVariant}
         />
-        <MatchGrid
-          loading={loading.live}
-          error={errors.live}
-          onRetry={() => load("live", "/view/matches?state=live", setLiveMatches)}
-          items={liveMatches.slice(0, 4)}
-          emptyText="No live matches right now."
-          render={(match) => <LiveCard data={match} key={match._id} />}
-        />
-      </div>
 
-      {/* hero section  */}
-      <div className="mt-16">
-        <HeroSection />
-      </div>
+        {/* Live Matches */}
+        <div className="mt-10">
+          <SectionHeader
+            icon={<LiveDot className="mr-2.5" />}
+            title="Live Matches"
+            subtitle="Happening now on CricScore."
+            count={liveMatches.length}
+            onViewAll={() => handleViewAll("live")}
+          />
+          <MatchGrid
+            loading={loading.live}
+            error={errors.live}
+            onRetry={() => load("live", "/view/matches?state=live", setLiveMatches)}
+            items={liveMatches.slice(0, 4)}
+            emptyText="No live matches right now."
+            render={(match) => <LiveCard data={match} key={match._id} />}
+          />
+        </div>
 
-      {/* upcoming */}
-      <div className="mt-16">
-        <SectionHeader
-          icon={
-            <Calendar size={20} className="inline-block mr-2 text-amber-300/70 align-middle" />
-          }
-          title="Upcoming Matches"
-          subtitle="Don't miss the exciting cricketing action ahead."
-          onViewAll={() => handleViewAll("upcoming")}
-        />
-        <MatchGrid
-          loading={loading.upcoming}
-          error={errors.upcoming}
-          onRetry={() =>
-            load("upcoming", "/view/matches?state=upcoming", setUpcomingMatches)
-          }
-          items={upcomingMatches.slice(0, 4)}
-          emptyText="No upcoming matches scheduled."
-          render={(match) => <UpcomingCard data={match} key={match._id} />}
-        />
-      </div>
+        {/* Tournament spotlight */}
+        {spotlightTournament && (
+          <div className="mt-14">
+            <TournamentSpotlight
+              tournament={spotlightTournament}
+              allTournaments={tournaments}
+              points={spotPoints}
+              stats={spotStats}
+              loading={spotLoading}
+            />
+          </div>
+        )}
 
-      {/* features  */}
-      <div className="mt-16">
-        <p className="text-3xl font-space text-center text-heading font-bold tracking-wide">
-          Powerful Features
-        </p>
-        <p className="text-sm text-center text-subheading font-normal mt-1 font-inter">
-          Your Local Cricket Tournament. Digitized.
-        </p>
-        <Features />
-      </div>
+        {/* upcoming */}
+        <div className="mt-14">
+          <SectionHeader
+            icon={
+              <Calendar size={19} className="mr-2 text-amber-500 align-middle" />
+            }
+            title="Upcoming Matches"
+            subtitle="Don't miss the action ahead."
+            count={upcomingMatches.length}
+            onViewAll={() => handleViewAll("upcoming")}
+          />
+          <MatchGrid
+            loading={loading.upcoming}
+            error={errors.upcoming}
+            onRetry={() =>
+              load("upcoming", "/view/matches?state=upcoming", setUpcomingMatches)
+            }
+            items={upcomingMatches.slice(0, 4)}
+            emptyText="No upcoming matches scheduled."
+            render={(match) => <UpcomingCard data={match} key={match._id} />}
+          />
+        </div>
 
-      {/* recently completed */}
-      <div className="mt-16">
-        <SectionHeader
-          icon={
-            <ClockFading size={20} className="inline-block mr-2 text-cyan-300 align-middle" />
-          }
-          title="Recently Concluded"
-          subtitle="Have a look at the recent thrillers."
-          onViewAll={() => handleViewAll("recent")}
-        />
-        <MatchGrid
-          loading={loading.recent}
-          error={errors.recent}
-          onRetry={() =>
-            load("recent", "/view/matches?state=completed", setRecentMatches)
-          }
-          items={recentMatches.slice(0, 4)}
-          emptyText="No completed matches yet."
-          render={(match) => <Recent data={match} key={match._id} />}
-        />
-      </div>
+        {/* features */}
+        <div className="mt-16">
+          <SectionHeader
+            icon={
+              <BarChart3 size={19} className="mr-2 text-emerald-500 align-middle" />
+            }
+            title="Built Like a Broadcast"
+            subtitle="The analytics suite the big platforms charge attention for — free for your ground."
+          />
+          <Features />
+        </div>
 
-      {/* Tournaments */}
-      <div className="mt-16">
-        <SectionHeader
-          icon={
-            <Trophy size={20} className="inline-block mr-2 text-[#10b981] align-middle" />
-          }
-          title="Tournaments"
-          subtitle="Follow your favorite."
-          onViewAll={() => navigate("/tournaments")}
-        />
-        <MatchGrid
-          loading={loading.tournaments}
-          error={errors.tournaments}
-          onRetry={() => load("tournaments", "/view/tournaments", setTournaments)}
-          items={tournaments}
-          emptyText="No tournaments found."
-          render={(t) => (
-            <Tournaments name={t.tournament_name} key={t._id} tour={tournaments} />
-          )}
-        />
-      </div>
-    </section>
+        {/* how it works */}
+        <div className="mt-16">
+          <SectionHeader
+            icon={
+              <Sparkles size={19} className="mr-2 text-lime-500 align-middle" />
+            }
+            title="Run Your Tournament"
+            subtitle="From first fixture to final — in three steps."
+          />
+          <HowItWorks />
+        </div>
+
+        {/* recently completed */}
+        <div className="mt-16">
+          <SectionHeader
+            icon={
+              <ClockFading size={19} className="mr-2 text-sky-500 align-middle" />
+            }
+            title="Recently Concluded"
+            subtitle="Have a look at the recent thrillers."
+            count={recentMatches.length}
+            onViewAll={() => handleViewAll("recent")}
+          />
+          <MatchGrid
+            loading={loading.recent}
+            error={errors.recent}
+            onRetry={() =>
+              load("recent", "/view/matches?state=completed", setRecentMatches)
+            }
+            items={recentMatches.slice(0, 4)}
+            emptyText="No completed matches yet."
+            render={(match) => <Recent data={match} key={match._id} />}
+          />
+        </div>
+
+        {/* Tournaments */}
+        <div className="mt-16">
+          <SectionHeader
+            icon={
+              <Trophy size={19} className="mr-2 text-[#10b981] align-middle" />
+            }
+            title="Tournaments"
+            subtitle="Follow your favourite."
+            count={tournaments.length}
+            onViewAll={() => navigate("/tournaments")}
+          />
+          <MatchGrid
+            loading={loading.tournaments}
+            error={errors.tournaments}
+            onRetry={() => load("tournaments", "/view/tournaments", setTournaments)}
+            items={tournaments}
+            emptyText="No tournaments found."
+            render={(t) => (
+              <Tournaments name={t.tournament_name} key={t._id} tour={tournaments} />
+            )}
+          />
+        </div>
+      </section>
+    </>
   );
 };
 

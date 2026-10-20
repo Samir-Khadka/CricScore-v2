@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Zap } from "lucide-react";
+import Logo from "./Logo";
 
 const footerLink =
   "text-[13px] text-secondary hover:text-heading transition-colors";
@@ -9,13 +9,8 @@ const Footer = () => {
     <footer className="w-full border-t card-border mt-16">
       <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-8 flex flex-col sm:flex-row sm:items-start gap-8">
         <div className="max-w-xs">
-          <div className="flex items-center gap-2">
-            <span className="h-6 w-6 rounded-lg bg-gradient-to-br from-emerald-500 to-lime-400 grid place-items-center text-slate-950">
-              <Zap size={13} strokeWidth={2.75} fill="currentColor" />
-            </span>
-            <span className="text-[15px] font-space font-bold text-heading">
-              Cric<span className="text-emerald-500">Score</span>
-            </span>
+          <div className="flex items-center">
+            <Logo size={26} wordmarkClass="text-[15px]" />
           </div>
           <p className="text-[13px] leading-relaxed text-secondary font-inter mt-2.5">
             A real-time cricket scoring platform with live score updates for

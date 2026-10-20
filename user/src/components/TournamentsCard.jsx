@@ -16,6 +16,7 @@ const Tournaments = (props) => {
   return (
     <div
       className="surface-card flex items-center gap-3 pl-4 pr-3 py-3.5 font-semibold text-heading cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:ring-emerald-500/40"
+      style={{ borderLeftWidth: 3, borderLeftColor: "#10b981" }}
       onClick={handleNavigate}
       role="button"
       tabIndex={0}
