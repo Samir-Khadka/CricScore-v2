@@ -10,6 +10,8 @@ import Matches from "./pages/Matches";
 import Login from "./pages/Login";
 import ScorerMatches from "./pages/ScorerMatches";
 import ScorerConsole from "./pages/ScorerConsole";
+import ManageTournament from "./pages/ManageTournament";
+import MatchSetup from "./pages/MatchSetup";
 import NotFound from "./pages/NotFound";
 
 /** Legacy deep link: /match/:tourName/:matchName/:matchId → /match/:matchId */
@@ -38,6 +40,11 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/score" element={<ScorerMatches />} />
           <Route path="/score/:matchId" element={<ScorerConsole />} />
+          <Route path="/manage/:tournamentId" element={<ManageTournament />} />
+          <Route
+            path="/manage/:tournamentId/match/:matchId/setup"
+            element={<MatchSetup />}
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ErrorBoundary>
