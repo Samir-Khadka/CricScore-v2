@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+/* Tailwind v4: drive the `dark:` variant from the `.dark` class the
+   ColorMode context toggles, not from the OS media query. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--color-body);
+    color: var(--color-heading)
+}
+
+:root {
+    --color-body: #f8fafc;
+    --color-card: #ffffff;
+    --color-secondary-bg: #f1f5f9;
+    --color-border-secondary: #c8cbce;
+    --color-heading: #0f172a;
+    --color-subheading: #475569;
+    --color-secondary: #64748b;
+    --color-card-border: #e2e8f0;
+}
+
+.dark {
+    --color-body: #0d0e12;
+    --color-card: #1c1f25;
+    --color-secondary-bg: #1e293b;
+    --color-border-secondary: #1e293b;
+    --color-heading: #e5e7eb;
+    --color-subheading: #94a3b8;
+    --color-secondary: #64748b;
+    --color-card-border: rgba(147, 51, 234, 0.3);
+}
+
+.heading-gradient {
+    color: var(--color-heading);
+    -webkit-font-smoothing: antialiased;
+}
+
+.dark .heading-gradient {
+    background-image: linear-gradient(90deg, #cc66ff 0%, #00dbde 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    text-shadow: 0 0 18px rgba(204, 102, 255, 0.18);
+}
+
+@layer utilities {
+    .font-inter {
+        font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .font-space {
+        font-family: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .bg-body {
+        background-color: var(--color-body);
+    }
+
+    .bg-card {
+        background-color: var(--color-card);
+    }
+
+    .bg-secondary {
+        background-color: var(--color-secondary-bg);
+    }
+
+    .text-heading {
+        color: var(--color-heading);
+    }
+
+    .text-subheading {
+        color: var(--color-subheading);
+    }
+
+    .text-secondary {
+        color: var(--color-secondary);
+    }
+
+    .card-border {
+        border-color: var(--color-card-border)
+    }
+
+    .border-secondary {
+        border-color: var(--color-border-secondary)
+    }
+}
