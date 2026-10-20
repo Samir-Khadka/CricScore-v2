@@ -1,5 +1,6 @@
 const express = require("express");
 const Scorer = require("../models/Scorer");
+const config = require("../config");
 const { createJwtToken } = require("../services/token");
 const multer = require("multer");
 const bcrypt = require("bcrypt");
@@ -51,8 +52,11 @@ async function handleScorerLogin(req, res) {
     return res
       .cookie("token", token, {
         httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
+        // The web app and API are served from different domains in
+        // production, so the session cookie must be SameSite=None there
+        // (with Secure) or browsers won't send it on API calls.
+        sameSite: config.isProd ? "none" : "lax",
+        secure: config.isProd,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .status(200)

@@ -1,0 +1,21 @@
+# CricScore API on Render (the web app is hosted separately on Wasmer).
+# Free plan: the service sleeps after ~15 min idle and cold-starts on the
+# next request — same behaviour as Kishan-Bazzar.
+services:
+  - type: web
+    name: cricscore-api
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/cricscore/view/tournaments
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # paste the MongoDB Atlas connection string in the dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://cricscore-v2.wasmer.app,http://localhost:5173
