@@ -86,6 +86,9 @@ export async function fetchSquad(tourId, teamId) {
           typeof p === "string"
             ? { name: p, role: DEFAULT_ROLE, isCaptain: false }
             : {
+                // Carry the subdoc _id through edits: it is the player's
+                // scoring identity across every match already played.
+                ...(p?._id ? { _id: String(p._id) } : {}),
                 name: p?.name,
                 role: normalizeRole(p?.role),
                 isCaptain: !!p?.isCaptain,
@@ -111,6 +114,7 @@ export async function saveSquad(tourId, teamId, players, exists) {
     tourId,
     teamId,
     players: players.map((p) => ({
+      ...(p._id ? { _id: p._id } : {}),
       name: p.name,
       role: normalizeRole(p.role),
       isCaptain: !!p.isCaptain,

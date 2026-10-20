@@ -56,6 +56,7 @@ function initialRows(squad) {
   const rows = (squad?.players || [])
     .slice(0, MAX_SQUAD)
     .map((p) => ({
+      ...(p._id ? { _id: p._id } : {}),
       name: p.name || "",
       role: normalizeRole(p.role),
       isCaptain: !!p.isCaptain,
@@ -214,6 +215,7 @@ function SquadSheet({ tourId, team, squad, onSaved }) {
     setError(null);
     setNotice(null);
     const players = filled.map((r) => ({
+      ...(r._id ? { _id: r._id } : {}),
       name: r.name,
       role: r.role,
       isCaptain: r.isCaptain,

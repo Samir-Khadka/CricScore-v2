@@ -86,18 +86,33 @@ async function handleUpdatePlayers (req, res) {
  try {
     const { tourId, teamId, players } = req.body;
 
-    const updated = await Players.findOneAndUpdate(
-      { 
-        tournamentId: new mongoose.Types.ObjectId(tourId), 
-        teamId: new mongoose.Types.ObjectId(teamId) 
-      },
-      { $set: { players } },
-      { new: true, upsert: false }
-    );
-
-    if (!updated) {
+    // Player _ids are the scoring identity: every ball ever bowled
+    // references them. A naive $set would mint fresh ids and orphan the
+    // names on every scorecard already played. Preserve each existing
+    // player's id by matching on name (the anchor selectXI uses too).
+    const existing = await Players.findOne({
+      tournamentId: new mongoose.Types.ObjectId(tourId),
+      teamId: new mongoose.Types.ObjectId(teamId),
+    });
+    if (!existing) {
       return res.status(404).json({ message: "Players not found to update" });
     }
+    const idByName = new Map(
+      (existing.players || []).map((p) => [String(p.name || "").trim().toLowerCase(), p._id])
+    );
+    const stablePlayers = (players || []).map((p) => {
+      const kept = p._id || idByName.get(String(p.name || "").trim().toLowerCase());
+      return kept ? { ...p, _id: kept } : p;
+    });
+
+    const updated = await Players.findOneAndUpdate(
+      {
+        tournamentId: new mongoose.Types.ObjectId(tourId),
+        teamId: new mongoose.Types.ObjectId(teamId)
+      },
+      { $set: { players: stablePlayers } },
+      { new: true, upsert: false }
+    );
 
     res.json({ message: "Players updated successfully", updated });
   } catch (err) {
