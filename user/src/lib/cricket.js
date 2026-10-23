@@ -164,6 +164,7 @@ export function inningsView(inning, state) {
     thisOver: state?.thisOver ?? inning?.this_over ?? [],
     freeHit: state?.freeHit ?? inning?.free_hit ?? false,
     isComplete: state?.isComplete ?? inning?.status === "completed",
+    awaitingBatsman: state?.awaitingBatsman ?? false,
     strikerId: state?.striker ?? inning?.striker ?? null,
     nonStrikerId: state?.nonStriker ?? inning?.non_striker ?? null,
     currentBowlerId: state?.currentBowler ?? inning?.current_bowler ?? null,

@@ -170,6 +170,15 @@ describe("inningsView from an engine state", () => {
   it("returns null when neither shape exists", () => {
     expect(inningsView(null, null)).toBeNull();
   });
+
+  it("surfaces awaitingBatsman from the engine state (scorer picker exclusion)", () => {
+    // ScorerConsole passes view.awaitingBatsman to the batsman picker to
+    // exclude retired-hurt players when a crease slot is empty. The flag
+    // must pass through the view model or the exclusion never fires.
+    expect(inningsView(null, { ...state, awaitingBatsman: true }).awaitingBatsman).toBe(true);
+    expect(view.awaitingBatsman).toBe(false);
+    expect(inningsView(snapshotInnings, null).awaitingBatsman).toBe(false);
+  });
 });
 
 describe("ballLabels", () => {
