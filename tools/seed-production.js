@@ -127,6 +127,31 @@ function bowlerLegal(state, fieldingXI, bowlerId) {
   return (used.get(String(bowlerId)) || 0) < maxBalls;
 }
 
+/** Next batsman in: first XI player who hasn't batted yet. The engine
+ * state has no yetToBat list — derive it from state.batsmen like the
+ * scorer console does. Returns the player id for the empty crease end. */
+function nextBatsman(state, battingXI) {
+  const batted = new Set(
+    (state.batsmen || []).map((b) => String(b.id ?? b.batsmanId))
+  );
+  return battingXI.find((id) => !batted.has(String(id))) || null;
+}
+
+function fillCrease(state, ctx, battingXI) {
+  const nextIn = nextBatsman(state, battingXI);
+  if (!nextIn) return false;
+  if (state.striker == null) ctx.striker = nextIn;
+  else if (state.nonStriker == null) ctx.nonStriker = nextIn;
+  else {
+    const fow = state.fallOfWickets || [];
+    const outId = fow.length ? fow[fow.length - 1].playerOut : null;
+    if (String(ctx.striker) === String(outId)) ctx.striker = nextIn;
+    else if (String(ctx.nonStriker) === String(outId)) ctx.nonStriker = nextIn;
+    else ctx.striker = nextIn;
+  }
+  return true;
+}
+
 /** Play one innings through the API. Resumes from live state if the
  * innings is already in progress. Stops early at stopAtLegalBalls. */
 async function playInnings(matchId, inningNumber, battingXI, fieldingXI, stopAtLegalBalls = Infinity) {
@@ -147,6 +172,11 @@ async function playInnings(matchId, inningNumber, battingXI, fieldingXI, stopAtL
     if (state.currentPair) {
       ctx.striker = state.currentPair.striker;
       ctx.nonStriker = state.currentPair.nonStriker;
+    } else {
+      // Pair broken (or not started): the state's crease is authoritative
+      // for whichever end is occupied.
+      if (state.striker) ctx.striker = state.striker;
+      if (state.nonStriker) ctx.nonStriker = state.nonStriker;
     }
     const events = existing.json.events || [];
     if (events.length && state.legalBalls % 6 !== 0) {
@@ -155,13 +185,7 @@ async function playInnings(matchId, inningNumber, battingXI, fieldingXI, stopAtL
       ctx.bowler = chooseBowler(state, fieldingXI) || ctx.bowler;
     }
     if (state.awaitingBatsman) {
-      const nextIn = (state.yetToBat || [])[0];
-      const fow = state.fallOfWickets || [];
-      const outId = fow.length ? fow[fow.length - 1].playerOut : null;
-      if (nextIn) {
-        if (String(ctx.striker) === String(outId) || !state.currentPair) ctx.striker = nextIn;
-        if (String(ctx.nonStriker) === String(outId)) ctx.nonStriker = nextIn;
-      }
+      fillCrease(state, ctx, battingXI);
     }
     console.log(`    resuming inn${inningNumber} at ${state.runs}/${state.wickets} (${state.oversText})`);
   }
@@ -198,16 +222,16 @@ async function playInnings(matchId, inningNumber, battingXI, fieldingXI, stopAtL
     if (state.currentPair) {
       ctx.striker = state.currentPair.striker;
       ctx.nonStriker = state.currentPair.nonStriker;
+    } else if (!state.awaitingBatsman) {
+      if (state.striker) ctx.striker = state.striker;
+      if (state.nonStriker) ctx.nonStriker = state.nonStriker;
     }
-    // New batsman for the empty end.
+    // New batsman for the empty end. First sync the occupied end from
+    // the state — ctx may hold the dismissed player at the other end.
     if (state.awaitingBatsman) {
-      const nextIn = (state.yetToBat || [])[0];
-      if (!nextIn) break; // all out edge
-      const fow = state.fallOfWickets || [];
-      const outId = fow.length ? fow[fow.length - 1].playerOut : null;
-      if (String(ctx.striker) === String(outId) || !state.currentPair) ctx.striker = nextIn;
-      if (String(ctx.nonStriker) === String(outId)) ctx.nonStriker = nextIn;
-      if (String(ctx.striker) === String(ctx.nonStriker)) ctx.nonStriker = nextIn;
+      if (state.striker) ctx.striker = state.striker;
+      if (state.nonStriker) ctx.nonStriker = state.nonStriker;
+      if (!fillCrease(state, ctx, battingXI)) break; // no batsmen left
     }
     // New bowler at over end — and a pre-flight guard at any over start.
     const overDone = state.legalBalls > 0 && state.legalBalls % 6 === 0;

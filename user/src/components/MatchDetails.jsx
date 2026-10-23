@@ -38,11 +38,11 @@ const MatchDetails = ({ match }) => {
           <p className="mt-6 text-lg">Playing XI</p>
           <div className="flex flex-col md:flex-row gap-6">
             {playingXI.map((p, i) => (
-              <div key={i} className="flex flex-col gap-3 px-2 md:px-10 mt-2">
+              <div key={p.teamId || p.teamName || i} className="flex flex-col gap-3 px-2 md:px-10 mt-2">
                 <p>{p.teamName}</p>
                 <ol className="list-decimal font-normal space-y-1">
                   {(p.players || []).map((pl, j) => (
-                    <li key={j}>
+                    <li key={pl._id || pl.name || j}>
                       {pl.name}
                       {pl.isCaptain ? " (c)" : ""}
                     </li>

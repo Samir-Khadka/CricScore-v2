@@ -67,9 +67,11 @@ async function handleScorerLogin(req, res) {
 }
 
 async function updateScorer(req,res){
- const { email, fullName, phone, country, postalCode } = req.body;
+ const { fullName, phone, country, postalCode } = req.body;
       try{
-    const scorer = await Scorer.findOne({ email });
+    // The record to update comes from the session token, never from a
+    // client-supplied email — otherwise anyone could edit any profile.
+    const scorer = await Scorer.findById(req.scorer._id);
 
     if (!scorer) throw new Error("Scorer doesn't exists");
      // Update fields if provided
@@ -105,6 +107,11 @@ async function uploadImage(req, res) {
 
     if (!req.file) {
       return res.status(400).json({ message: "No image uploaded" });
+    }
+
+    // Scorers can only replace their own profile image.
+    if (String(email) !== String(req.scorer.email)) {
+      return res.status(403).json({ message: "You can only update your own profile" });
     }
 
     const scorer = await Scorer.findOne({ email });

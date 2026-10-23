@@ -1,5 +1,5 @@
 const express = require("express");
-const {getLiveMatches, getMatch, getScheduledMatches, getRecentMatches} = require("../controllers/UserController");
+const {getLiveMatches, getMatch, getScheduledMatches, getRecentMatches} = require("../controllers/userController");
 const router = express.Router();
 
 router.get("/live/:count", getLiveMatches);

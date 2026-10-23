@@ -121,14 +121,14 @@ export async function saveSquad(tourId, teamId, players, exists) {
     })),
   };
   if (exists) {
-    await api.put("/players/update", body);
+    await api.put(`/players/${tourId}/${teamId}`, body);
     return;
   }
   try {
     await api.post("/players", body);
   } catch (err) {
     if (/already/i.test(err?.message || "")) {
-      await api.put("/players/update", body);
+      await api.put(`/players/${tourId}/${teamId}`, body);
       return;
     }
     throw err;

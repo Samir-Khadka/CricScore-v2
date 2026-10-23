@@ -1,5 +1,5 @@
 const Match = require("../models/Match");
-const Tournament = require("../models/Tournment");
+const Tournament = require("../models/Tournament");
 const Innings = require("../models/Innings");
 const scoring = require("../services/scoringService");
 const { computeInningsState } = require("../engine/scoringEngine");
@@ -178,6 +178,21 @@ async function handleGetPointsTable(req, res) {
       table[String(m.teamB_id)] ??= blank(String(m.teamB_id), m.teamB);
     });
 
+    // Batch the innings fetch: one query for all completed matches,
+    // grouped in memory — not one query per match inside the loop.
+    const completedIds = matches
+      .filter((m) => m.matchState === "completed")
+      .map((m) => m._id);
+    const allInnings = completedIds.length
+      ? await Innings.find({ matchId: { $in: completedIds } })
+      : [];
+    const inningsByMatch = new Map();
+    for (const inn of allInnings) {
+      const key = String(inn.matchId);
+      if (!inningsByMatch.has(key)) inningsByMatch.set(key, []);
+      inningsByMatch.get(key).push(inn);
+    }
+
     for (const match of matches) {
       if (match.matchState !== "completed") continue;
       const a = table[String(match.teamA_id)];
@@ -199,7 +214,7 @@ async function handleGetPointsTable(req, res) {
         b.points += 2;
       }
 
-      const innings = await Innings.find({ matchId: match._id });
+      const innings = inningsByMatch.get(String(match._id)) || [];
       for (const inn of innings) {
         const bat = table[String(inn.batting_team)];
         const bowl = table[String(inn.fielding_team)];

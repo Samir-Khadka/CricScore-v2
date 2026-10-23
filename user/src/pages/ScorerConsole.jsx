@@ -1,30 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  ChevronRight,
-  RotateCcw,
-  Trophy,
-  X,
-} from "lucide-react";
+import { ArrowLeft, ChevronRight, Trophy, X } from "lucide-react";
 import PickerSheet from "../components/scorer/PickerSheet";
+import ScoreHeader from "../components/scorer/ScoreHeader";
+import BallPad from "../components/scorer/BallPad";
+import RecentBalls from "../components/scorer/RecentBalls";
+import StickyBar from "../components/scorer/StickyBar";
 import ExtraSheet from "../components/scorer/ExtraSheet";
 import WicketModal from "../components/scorer/WicketModal";
-import TimelineItem from "../components/TimelineItem";
 import { ErrorBox, Spinner } from "../components/States";
 import { api, getScorerId, unwrap } from "../lib/api";
 import {
-  ballLabels,
-  ballSymbol,
-  eventCommentary,
-  fmt2,
   inningsView,
   matchFormat,
   squadPlayers,
 } from "../lib/cricket";
 
 const ZERO_EXTRAS = { wide: 0, noBall: 0, bye: 0, legBye: 0, penalty: 0 };
-const RUN_BUTTONS = [0, 1, 2, 3, 4, 6];
 
 /** Fresh idempotency key for one scoring tap. */
 function newClientEventId() {
@@ -444,9 +436,6 @@ const ScorerConsole = () => {
     return s;
   };
 
-  const recentEvents = (cur?.events || []).slice(-6);
-  const recentLabels = ballLabels(cur?.events || []).slice(-6);
-
   const creaseRow = (label, id, figures, onTap, disabled) => (
     <button
       type="button"
@@ -478,9 +467,6 @@ const ScorerConsole = () => {
   const bowlerFig = bowler
     ? `${bowlerById[String(bowler)]?.oversText ?? "0.0"} - ${bowlerById[String(bowler)]?.wickets ?? 0}/${bowlerById[String(bowler)]?.runsConceded ?? 0}`
     : "";
-
-  const padBtn =
-    "min-h-14 rounded-2xl border font-space font-bold text-xl flex items-center justify-center cursor-pointer shadow-sm select-none active:scale-95 transition-all duration-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100";
 
   return (
     <div className="min-h-screen max-w-2xl mx-auto px-3 py-4 pb-28">
@@ -545,74 +531,15 @@ const ScorerConsole = () => {
         <ErrorBox message={cur.error} onRetry={() => loadInnings(inningNumber)} />
       ) : (
         <>
-          {/* score header */}
-          <div className="mt-4 surface-card p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="font-bold text-heading text-lg leading-tight">
-                  {battingTeamName}
-                </p>
-                <p className="text-xs text-subheading">
-                  vs {fieldingTeamName} · {format} overs
-                </p>
-              </div>
-              {view?.freeHit && (
-                <span className="bg-amber-500 text-black text-xs font-black px-2.5 py-1 rounded-full animate-pulse">
-                  FREE HIT
-                </span>
-              )}
-            </div>
-            <div className="flex items-end justify-between mt-2 flex-wrap gap-2">
-              <p className="font-space font-black text-4xl text-heading tabular-nums">
-                {view?.runs}/{view?.wickets}
-                <span className="text-lg text-subheading font-semibold ml-2">
-                  ({view?.oversText} ov)
-                </span>
-              </p>
-              <div className="text-right text-sm font-semibold text-subheading tabular-nums">
-                <p>
-                  CRR{" "}
-                  <span className="font-space text-heading">
-                    {fmt2(view?.crr)}
-                  </span>
-                </p>
-                {inningNumber === 2 && view?.target ? (
-                  <p>
-                    Need{" "}
-                    <span className="font-space text-heading">
-                      {runsNeeded}
-                    </span>{" "}
-                    off{" "}
-                    <span className="font-space text-heading">
-                      {ballsRemaining}
-                    </span>{" "}
-                    · RRR{" "}
-                    <span className="font-space text-heading">
-                      {fmt2(view?.rrr)}
-                    </span>
-                  </p>
-                ) : (
-                  <p>
-                    Projected{" "}
-                    <span className="font-space text-heading">
-                      {view?.projectedScore ??
-                        Math.round((view?.crr || 0) * format)}
-                    </span>
-                  </p>
-                )}
-              </div>
-            </div>
-            {view?.thisOver?.length > 0 && (
-              <div className="flex items-center flex-wrap mt-3">
-                <span className="text-xs font-bold text-secondary mr-1">
-                  This over:
-                </span>
-                {view.thisOver.map((s, i) => (
-                  <TimelineItem key={i} result={s} />
-                ))}
-              </div>
-            )}
-          </div>
+          <ScoreHeader
+            battingTeamName={battingTeamName}
+            fieldingTeamName={fieldingTeamName}
+            format={format}
+            view={view}
+            inningNumber={inningNumber}
+            runsNeeded={runsNeeded}
+            ballsRemaining={ballsRemaining}
+          />
 
           {/* result / completion banner */}
           {(resultText || view?.isComplete || match?.result) && (
@@ -713,140 +640,24 @@ const ScorerConsole = () => {
             </button>
           )}
 
-          {/* ball pad */}
-          <div className="mt-4" aria-busy={posting}>
-            <div className="grid grid-cols-6 gap-2">
-              {RUN_BUTTONS.map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  disabled={padDisabled}
-                  onClick={() => postBall({ batRuns: n })}
-                  className={`${padBtn} ${
-                    n === 4
-                      ? "bg-emerald-600 text-white border-emerald-600"
-                      : n === 6
-                        ? "bg-emerald-500 text-white border-emerald-500"
-                        : "bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600/70 text-heading"
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-4 gap-2 mt-2">
-              <button
-                type="button"
-                disabled={padDisabled}
-                onClick={() => setSheet("wide")}
-                className={`${padBtn} bg-amber-500 text-white border-amber-500 text-base`}
-              >
-                WD
-              </button>
-              <button
-                type="button"
-                disabled={padDisabled}
-                onClick={() => setSheet("noball")}
-                className={`${padBtn} bg-amber-600 text-white border-amber-600 text-base`}
-              >
-                NB
-              </button>
-              <button
-                type="button"
-                disabled={padDisabled}
-                onClick={() => setSheet("bye")}
-                className={`${padBtn} bg-sky-600 text-white border-sky-600 text-base`}
-              >
-                BYE
-              </button>
-              <button
-                type="button"
-                disabled={padDisabled}
-                onClick={() => setSheet("legbye")}
-                className={`${padBtn} bg-sky-500 text-white border-sky-500 text-base`}
-              >
-                LB
-              </button>
-            </div>
-            <div className="mt-2">
-              <button
-                type="button"
-                disabled={padDisabled}
-                onClick={() => setSheet("wicket")}
-                className={`${padBtn} w-full bg-red-600 text-white border-red-600 tracking-wide`}
-              >
-                WICKET
-              </button>
-            </div>
-            {posting && (
-              <p className="text-center text-sm text-subheading mt-2 animate-pulse">
-                Saving ball…
-              </p>
-            )}
-          </div>
+          <BallPad
+            disabled={padDisabled}
+            posting={posting}
+            onRun={(n) => postBall({ batRuns: n })}
+            onOpenSheet={setSheet}
+          />
 
-          {/* recent balls */}
-          {recentEvents.length > 0 && (
-            <div className="mt-5">
-              <p className="text-sm font-bold text-subheading mb-2">
-                Recent balls
-              </p>
-              <div className="space-y-1.5">
-                {recentEvents
-                  .map((ev, i) => ({ ev, label: recentLabels[i] }))
-                  .reverse()
-                  .map(({ ev, label }, i) => (
-                    <div
-                      key={ev._id || i}
-                      className="flex items-center gap-3 bg-card ring-1 ring-black/5 dark:ring-white/10 rounded-xl px-3 py-2 shadow-sm"
-                    >
-                      <span className="font-space font-bold text-subheading text-sm w-10 tabular-nums">
-                        {label}
-                      </span>
-                      <span className="flex-1 text-sm text-heading truncate">
-                        {eventCommentary(ev)}
-                      </span>
-                      <TimelineItem result={ballSymbol(ev)} />
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
+          <RecentBalls events={cur?.events || []} />
 
-          {/* sticky action bar: innings status + undo */}
-          <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-none">
-            <div className="max-w-2xl mx-auto px-3 pb-3">
-              <div className="glass surface-card pointer-events-auto flex items-center gap-3 px-4 py-3 shadow-2xl">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-secondary">
-                    Innings {inningNumber}
-                    {view?.freeHit ? " · Free hit" : ""}
-                    {view?.isComplete ? " · Complete" : ""}
-                  </p>
-                  <p className="font-space font-bold text-heading tabular-nums truncate">
-                    {battingTeamName} {view?.runs}/{view?.wickets}
-                    <span className="text-subheading text-sm font-semibold">
-                      {" "}
-                      ({view?.oversText} ov)
-                    </span>
-                  </p>
-                </div>
-                {posting && (
-                  <span className="text-xs font-semibold text-subheading animate-pulse shrink-0">
-                    Saving…
-                  </span>
-                )}
-                <button
-                  type="button"
-                  disabled={posting || (cur?.events?.length ?? 0) === 0}
-                  onClick={undo}
-                  className="min-h-11 px-4 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold text-sm flex items-center gap-2 cursor-pointer shadow active:scale-95 transition-all duration-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 shrink-0"
-                >
-                  <RotateCcw size={17} /> UNDO
-                </button>
-              </div>
-            </div>
-          </div>
+          <StickyBar
+            inningNumber={inningNumber}
+            view={view}
+            battingTeamName={battingTeamName}
+            posting={posting}
+            canUndo={(cur?.events?.length ?? 0) > 0}
+            onUndo={undo}
+          />
+
         </>
       )}
 

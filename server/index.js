@@ -15,7 +15,7 @@ const scorerRoute = require("./routes/scorerRoute.js");
 const tournamentRoute = require("./routes/tournamentRoute.js");
 const playersRoute = require("./routes/playersRoute.js");
 const matchRoute = require("./routes/matchRoute.js");
-const userRoute = require("./routes/UserRouter.js");
+const userRoute = require("./routes/userRoute.js");
 const ballByballRoute = require("./routes/ballByBallRoute.js");
 
 const app = express();

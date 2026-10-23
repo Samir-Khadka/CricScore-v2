@@ -120,8 +120,8 @@ const Scorecard = ({ teamName, view }) => {
         <div className="px-6 py-4 border-b card-border">
           <p className="text-heading font-bold mb-2">Fall of Wickets</p>
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-subheading">
-            {fallOfWickets.map((f, i) => (
-              <span key={i}>
+            {fallOfWickets.map((f) => (
+              <span key={f.wicket}>
                 <span className="font-space font-semibold text-heading">
                   {f.runs}-{f.wicket}
                 </span>{" "}

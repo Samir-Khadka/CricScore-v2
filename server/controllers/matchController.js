@@ -1,14 +1,55 @@
 const mongoose = require("mongoose");
 const Match = require("../models/Match");
+const Tournament = require("../models/Tournament");
+const Innings = require("../models/Innings");
+const BallEvents = require("../models/BallEvents");
+const { pickFields, loadOwned } = require("../services/ownership");
+
+// Fields a scorer may change on their own match after creation. Match
+// state, winner, result, innings, playingXI and createdBy are NOT here:
+// they move through their own endpoints / the scoring engine only.
+const MATCH_EDITABLE = [
+  "match_date",
+  "match_time",
+  "venue",
+  "teamA",
+  "teamB",
+  "teamA_id",
+  "teamB_id",
+  "toss",
+  "umpires",
+  "matchRefree",
+];
 
 async function handleCreateMatch(req, res) {
   try {
-    const { match_time, match_date } = req.body;
-    const matchExists = await Match.findOne({ match_time, match_date });
-    if (matchExists) {
+    const { match_time, match_date, tournament_id } = req.body;
+
+    // A fixture belongs to a tournament the scorer owns.
+    if (!mongoose.Types.ObjectId.isValid(tournament_id)) {
+      return res.status(400).json({ message: "Invalid tournament id" });
+    }
+    const tournament = await Tournament.findById(tournament_id);
+    if (!tournament) {
+      return res.status(404).json({ message: "Tournament not found" });
+    }
+    if (String(tournament.createdBy) !== String(req.scorer._id)) {
       return res
-        .status(422)
-        .json({ message: "Match already exist at given date and time" });
+        .status(403)
+        .json({ message: "You can only add matches to your own tournaments" });
+    }
+
+    // Duplicate check is scoped to THIS tournament: two different
+    // tournaments may legitimately play at the same date and time.
+    const matchExists = await Match.findOne({
+      tournament_id,
+      match_time,
+      match_date,
+    });
+    if (matchExists) {
+      return res.status(422).json({
+        message: "A match already exists in this tournament at that date and time",
+      });
     }
 
     await Match.create({
@@ -27,7 +68,7 @@ async function handleCreateMatch(req, res) {
 
     return res.status(201).json({ message: "Match created successfully" });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res
       .status(500)
       .json({ message: "Some error occured while creating match" });
@@ -35,10 +76,16 @@ async function handleCreateMatch(req, res) {
 }
 
 async function handleGetMatches(req, res) {
-  const scorer = req.params.scorerId;
+  // The list is always the caller's own matches — the :scorerId param
+  // may not be used to enumerate another scorer's fixtures.
+  if (String(req.params.scorerId) !== String(req.scorer._id)) {
+    return res
+      .status(403)
+      .json({ message: "You can only list your own matches" });
+  }
 
   try {
-    const matches = await Match.find({ createdBy: scorer }).select(
+    const matches = await Match.find({ createdBy: req.scorer._id }).select(
       "-toss -umpires -matchRefree -innings -result -points"
     );
     if (matches.length === 0) {
@@ -46,9 +93,9 @@ async function handleGetMatches(req, res) {
     }
     return res.status(200).json({ message: "Found", data: matches });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res
-      .status(422)
+      .status(500)
       .json({ message: "Some error occured while fetching matches" });
   }
 }
@@ -57,7 +104,6 @@ async function handleGetMatch(req, res) {
   const { matchId } = req.params;
 
   try {
-    // Validate if matchId is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(matchId)) {
       return res.status(400).json({ message: "Invalid match ID format." });
     }
@@ -68,75 +114,63 @@ async function handleGetMatch(req, res) {
       return res.status(404).json({ message: "Match not found." });
     }
 
-    return res.status(200).json({ Match: match });
+    return res.status(200).json({ message: "Found", data: match });
   } catch (error) {
     return res.status(500).json({ message: "Server error" });
   }
 }
+
 async function handleUpdateMatch(req, res) {
   try {
     const matchId = req.params.matchId;
-    const isUpdated = await Match.findByIdAndUpdate(
-      matchId,
-      { $set: req.body },
-      { new: true }
-    );
-    if (!isUpdated) {
-      return res.status(500).json({ message: "Failed to update." });
+    if (!mongoose.Types.ObjectId.isValid(matchId)) {
+      return res.status(400).json({ message: "Invalid match ID format." });
     }
-    return res.status(200).json({ message: "Updated Successfully" });
+    const match = await loadOwned(res, Match, matchId, req.scorer._id, "Match");
+    if (!match) return;
+
+    const updates = pickFields(req.body, MATCH_EDITABLE);
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "No editable fields provided" });
+    }
+    Object.assign(match, updates);
+    await match.save();
+    return res
+      .status(200)
+      .json({ message: "Updated Successfully", data: match });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res
       .status(500)
       .json({ message: "Some error occured while updating match" });
   }
 }
+
 async function handleDeleteMatch(req, res) {
   try {
     const matchId = req.params.matchId;
-    const match = await Match.findByIdAndDelete(matchId);
-    if (!match) {
-      return res.status(500).json({ message: "Failed to delete." });
+    if (!mongoose.Types.ObjectId.isValid(matchId)) {
+      return res.status(400).json({ message: "Invalid match ID format." });
     }
+    const match = await loadOwned(res, Match, matchId, req.scorer._id, "Match");
+    if (!match) return;
+
+    // Cascade: the match's innings and their ball-by-ball logs go with
+    // it, so no orphaned scoring data is left behind.
+    const innings = await Innings.find({ matchId: match._id }).select("_id");
+    if (innings.length > 0) {
+      await BallEvents.deleteMany({
+        inning: { $in: innings.map((i) => i._id) },
+      });
+      await Innings.deleteMany({ matchId: match._id });
+    }
+    await match.deleteOne();
     return res.status(200).json({ message: "Deleted Successfully" });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res
       .status(500)
       .json({ message: "Some error occured while deleting match" });
-  }
-}
-
-async function handlePreMatch(req, res) {
-  console.log(req.body);
-
-  try {
-    const matchId = req.params.matchId;
-    const match = await Match.findById(matchId);
-    console.log("req.body.onField:", req.body.onField);
-    if (!match) {
-      return res.status(422).json({ message: "Match not found" });
-    }
-    await Match.findByIdAndUpdate(matchId, {
-      toss: { wonBy: req.body.tossWinner, decision: req.body.decision },
-      umpires: {
-        onField: Array.isArray(req.body.onField)
-          ? req.body.onField
-          : req.body.onField
-          ? req.body.onField.split(",").map((u) => u.trim())
-          : [],
-        third: req.body.third || null,
-        tv: req.body.tv || null,
-      },
-      matchRefree: req.body.r,
-    });
-    return res.status(200).json({ message: "Prematch updated successfully" });
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ message: "Something went wrong while updating prematch data" });
   }
 }
 
@@ -150,6 +184,11 @@ async function savePlayingXI(req, res, next) {
   try {
     const match = await Match.findById(matchId);
     if (!match) return res.status(404).json({ message: "Match not found" });
+    if (String(match.createdBy) !== String(req.scorer._id)) {
+      return res
+        .status(403)
+        .json({ message: "You can only set up your own matches" });
+    }
 
     // Update match info
     if (toss) match.toss = toss;
@@ -178,7 +217,8 @@ async function handleUpdateMatchState(req, res) {
   const { match_state } = req.body;
   const { matchId } = req.params;
 
-  if (!["live", "scheduled", "pause", "completed"].includes(match_state)) {
+  // Canonical state set for the modern stack (see savePlayingXI note).
+  if (!["upcoming", "live", "completed"].includes(match_state)) {
     return res.status(400).json({ message: "Invalid match state" });
   }
 
@@ -186,13 +226,18 @@ async function handleUpdateMatchState(req, res) {
     return res.status(400).json({ message: "Invalid match ID format." });
   }
 
-  const match = await Match.findById(matchId);
-  if (!match) return res.status(404).json({ message: "Match not found" });
+  try {
+    const match = await loadOwned(res, Match, matchId, req.scorer._id, "Match");
+    if (!match) return;
 
-  match.matchState = match_state;
-  await match.save();
+    match.matchState = match_state;
+    await match.save();
 
-  res.json({ message: "Match state updated", match });
+    return res.json({ message: "Match state updated", data: match });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
 }
 
 module.exports = {
@@ -201,7 +246,6 @@ module.exports = {
   handleGetMatch,
   handleUpdateMatch,
   handleDeleteMatch,
-  handlePreMatch,
   savePlayingXI,
   handleUpdateMatchState,
 };

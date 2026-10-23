@@ -17,7 +17,7 @@ const Partnerships = ({ partnerships }) => {
         <p className="text-lg text-heading font-bold">Partnerships</p>
       </div>
       <ul>
-        {list.map((p, i) => {
+        {list.map((p) => {
           const [a, b] = p.batsmen || [];
           const status = p.ongoing
             ? { text: "Unbeaten", cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-emerald-500/30" }
@@ -28,7 +28,7 @@ const Partnerships = ({ partnerships }) => {
                 : null;
           return (
             <li
-              key={i}
+              key={`${a?.id || a?.name || "?"}-${b?.id || b?.name || "?"}-${p.wicket ?? "ongoing"}`}
               className="flex items-center justify-between gap-3 px-5 py-3 border-b card-border last:border-b-0"
             >
               <div className="min-w-0">

@@ -180,13 +180,31 @@ const Match = () => {
     return () => ctrl.abort();
   }, [fetchDetail]);
 
-  // Live updates: the socket tells us a ball landed; refetch the detail.
+  // Live updates: the socket tells us a ball landed. Its payload is the
+  // raw innings snapshots — not the engine-derived state, events and
+  // milestones this page renders — so the detail is still refetched,
+  // but coalesced: a burst of balls collapses into one refetch, and a
+  // refetch already in flight is followed by at most one more.
+  const refetchTimerRef = useRef(null);
   useEffect(() => {
     const socket = matchSocket(matchId);
+    const scheduleRefetch = () => {
+      if (refetchTimerRef.current) return;
+      refetchTimerRef.current = setTimeout(() => {
+        refetchTimerRef.current = null;
+        if (fetchingRef.current) {
+          scheduleRefetch();
+          return;
+        }
+        fetchDetail(undefined, true);
+      }, 350);
+    };
     socket.on("connect", () => setConnected(true));
     socket.on("disconnect", () => setConnected(false));
-    socket.on("matchLiveUpdate", () => fetchDetail(undefined, true));
+    socket.on("matchLiveUpdate", scheduleRefetch);
     return () => {
+      if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current);
+      refetchTimerRef.current = null;
       socket.off("matchLiveUpdate");
       socket.disconnect();
     };
