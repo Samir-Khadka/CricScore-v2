@@ -6,7 +6,7 @@ import { getScorerId } from "../lib/api";
 import Logo from "./Logo";
 
 const linkClass = ({ isActive }) =>
-  `px-3.5 py-2 rounded-full text-sm transition-all duration-200 ${
+  `px-3.5 py-2.5 rounded-full text-sm transition-colors duration-200 ${
     isActive
       ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-bold"
       : "text-subheading hover:text-heading hover:bg-secondary/70 font-semibold"
@@ -33,7 +33,7 @@ const NavBar = () => {
       type="button"
       onClick={toggleTheme}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="p-2 rounded-full text-subheading hover:text-heading hover:bg-secondary/70 transition-colors cursor-pointer"
+      className="btn-icon"
     >
       {isDark ? <Sun size={19} /> : <Moon size={19} />}
     </button>
@@ -81,14 +81,14 @@ const NavBar = () => {
           <span className="lg:hidden">{themeButton}</span>
           <Link
             to={scorerId ? "/score" : "/login"}
-            className="hidden sm:inline-flex items-center px-4 py-2.5 text-slate-950 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-500 to-lime-400 cursor-pointer shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/45 hover:-translate-y-px active:translate-y-0 transition-all duration-300"
+            className="btn-primary hidden sm:inline-flex"
             onClick={closeMenu}
           >
             Start Scoring
           </Link>
           <button
             type="button"
-            className="lg:hidden p-2 rounded-full text-heading hover:bg-secondary/70 cursor-pointer"
+            className="btn-icon lg:hidden"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
@@ -115,7 +115,7 @@ const NavBar = () => {
           </NavLink>
           <Link
             to={scorerId ? "/score" : "/login"}
-            className="sm:hidden mt-1 px-4 py-3 text-center text-slate-950 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-500 to-lime-400"
+            className="btn-primary sm:hidden mt-1 w-full"
             onClick={closeMenu}
           >
             Start Scoring

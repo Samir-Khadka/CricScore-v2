@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowRight, MapPin } from "lucide-react";
 import {
   findInnings,
@@ -19,7 +19,6 @@ import WinMeter from "./WinMeter";
  * Props: { match, detail, variant: "live" | "recent" }
  */
 const FeaturedMatch = ({ match, detail, variant }) => {
-  const navigate = useNavigate();
   const m = detail?.match || match;
   if (!m) return null;
 
@@ -118,17 +117,9 @@ const FeaturedMatch = ({ match, detail, variant }) => {
       : null;
 
   return (
-    <div
-      className="surface-card overflow-hidden cursor-pointer group"
-      onClick={() => m._id && navigate(`/match/${m._id}`)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if ((e.key === "Enter" || e.key === " ") && m._id) {
-          e.preventDefault();
-          navigate(`/match/${m._id}`);
-        }
-      }}
+    <Link
+      to={m._id ? `/match/${m._id}` : "#"}
+      className="surface-card card-link block overflow-hidden group"
     >
       {/* team colour bar */}
       <div className="flex h-1.5" aria-hidden="true">
@@ -155,7 +146,7 @@ const FeaturedMatch = ({ match, detail, variant }) => {
             </p>
           </div>
           {isLive ? (
-            <span className="flex items-center gap-1.5 text-rose-500 text-[11px] font-black tracking-[0.16em] shrink-0 pt-0.5">
+            <span className="live-badge shrink-0 pt-0.5">
               <LiveDot /> LIVE
             </span>
           ) : (
@@ -224,12 +215,12 @@ const FeaturedMatch = ({ match, detail, variant }) => {
           </div>
         )}
 
-        <div className="mt-4 flex items-center gap-1.5 text-[13px] font-bold text-emerald-600 dark:text-emerald-400 group-hover:gap-2.5 transition-all">
+        <div className="mt-4 flex items-center gap-1.5 text-[13px] font-bold text-emerald-600 dark:text-emerald-400 group-hover:gap-2.5 transition-[gap] duration-200">
           Full scorecard
           <ArrowRight size={15} />
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
@@ -290,7 +281,7 @@ export const FeaturedMatchMock = () => {
               <MapPin size={13} /> Urlabari Ground
             </p>
           </div>
-          <span className="text-[10px] font-black tracking-[0.16em] uppercase bg-secondary/70 text-subheading rounded-full px-2.5 py-1 ring-1 ring-black/5 dark:ring-white/10 shrink-0">
+          <span className="count-pill uppercase tracking-[0.16em] shrink-0">
             Preview
           </span>
         </div>

@@ -4,7 +4,7 @@ import LiveCard from "../components/ScoreSummaryCard";
 import LiveDot from "../components/LiveDot";
 import UpcomingCard from "../components/Upcoming";
 import Recent from "../components/Recent";
-import { ErrorBox, SkeletonCard } from "../components/States";
+import { ErrorBox, EmptyBox, SkeletonCard } from "../components/States";
 import { api, homeSocket, unwrap } from "../lib/api";
 
 const VALID_TYPES = ["live", "upcoming", "recent", "completed"];
@@ -81,7 +81,7 @@ const Matches = () => {
             {type} Matches
           </h1>
           {!loading && !error && (
-            <span className="font-space tabular-nums text-[11px] font-bold bg-secondary/70 text-subheading rounded-full px-2.5 py-1 ring-1 ring-black/5 dark:ring-white/10">
+            <span className="count-pill">
               {matches.length} {matches.length === 1 ? "match" : "matches"}
             </span>
           )}
@@ -91,7 +91,7 @@ const Matches = () => {
         </p>
 
         {/* type tabs */}
-        <div className="mt-5 inline-flex flex-row gap-1 p-1.5 rounded-2xl bg-secondary/50 ring-1 ring-black/5 dark:ring-white/10">
+        <div className="tab-bar mt-5">
           {TYPE_TABS.map((t) => {
             const active =
               type === t.id || (t.id === "recent" && type === "completed");
@@ -100,11 +100,7 @@ const Matches = () => {
                 key={t.id}
                 to={`/matches/${t.id}`}
                 aria-current={active ? "page" : undefined}
-                className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  active
-                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
-                    : "text-subheading hover:text-heading hover:bg-card/70"
-                }`}
+                className={`tab-item ${active ? "tab-item-active" : ""}`}
               >
                 {t.label}
               </Link>
@@ -122,7 +118,9 @@ const Matches = () => {
       ) : error ? (
         <ErrorBox message={error} onRetry={() => fetchMatches()} />
       ) : matches.length === 0 ? (
-        <p className="text-subheading mt-8">No matches found.</p>
+        <div className="mt-8">
+          <EmptyBox message="No matches found." />
+        </div>
       ) : (
         <div className="flex flex-row flex-wrap gap-5 justify-center lg:justify-start mt-8">
           {matches.map((match) =>

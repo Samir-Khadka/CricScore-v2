@@ -4,7 +4,7 @@ import { RotateCcw } from "lucide-react";
 function StickyBar({ inningNumber, view, battingTeamName, posting, canUndo, onUndo }) {
   return (
 <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-none">
-  <div className="max-w-2xl mx-auto px-3 pb-3">
+  <div className="max-w-2xl mx-auto px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
     <div className="glass surface-card pointer-events-auto flex items-center gap-3 px-4 py-3 shadow-2xl">
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-bold uppercase tracking-wider text-secondary">
@@ -29,7 +29,7 @@ function StickyBar({ inningNumber, view, battingTeamName, posting, canUndo, onUn
         type="button"
         disabled={posting || !canUndo}
         onClick={onUndo}
-        className="min-h-11 px-4 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold text-sm flex items-center gap-2 cursor-pointer shadow active:scale-95 transition-all duration-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 shrink-0"
+        className="min-h-11 px-4 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold text-sm flex items-center gap-2 cursor-pointer shadow active:scale-95 transition-transform duration-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 shrink-0"
       >
         <RotateCcw size={17} /> UNDO
       </button>

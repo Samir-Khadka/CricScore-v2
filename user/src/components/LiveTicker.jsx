@@ -41,7 +41,7 @@ const LiveTicker = ({ matches }) => {
                 <Link
                   key={m._id}
                   to={`/match/${m._id}`}
-                  className="flex items-center gap-2.5 rounded-full bg-secondary/60 hover:bg-secondary ring-1 ring-black/5 dark:ring-white/10 pl-2 pr-3.5 py-1.5 transition-colors whitespace-nowrap"
+                  className="flex items-center gap-2.5 rounded-full bg-secondary/60 hover:bg-secondary ring-1 ring-black/5 dark:ring-white/10 pl-2 pr-3.5 py-2 transition-colors whitespace-nowrap"
                 >
                   <LiveDot />
                   <span className="font-condensed font-semibold text-[15px] tracking-wide text-heading">

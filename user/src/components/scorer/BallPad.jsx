@@ -1,7 +1,7 @@
 const RUN_BUTTONS = [0, 1, 2, 3, 4, 6];
 
 const padBtn =
-  "min-h-14 rounded-2xl border font-space font-bold text-xl flex items-center justify-center cursor-pointer shadow-sm select-none active:scale-95 transition-all duration-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100";
+  "min-h-14 rounded-2xl border font-space font-bold text-xl flex items-center justify-center cursor-pointer shadow-sm select-none active:scale-95 transition-transform duration-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100";
 
 /**
  * The scoring keypad: run buttons, extras sheets and the wicket

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogIn, UserPlus } from "lucide-react";
 import { api, getScorerId, setScorer } from "../lib/api";
+import { inputCls, labelCls, primaryBtnCls } from "../lib/formStyles";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -43,15 +44,12 @@ const Login = () => {
     }
   };
 
-  const inputCls =
-    "w-full min-h-12 px-4 rounded-xl border-2 border-secondary bg-secondary/30 text-heading placeholder:text-secondary outline-none focus:border-[#10b981]";
-
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md surface-card p-6 md:p-8">
-        <p className="text-2xl font-space font-bold text-heading text-center">
+        <h1 className="text-2xl font-space font-bold text-heading text-center">
           Scorer {mode === "login" ? "Login" : "Sign Up"}
-        </p>
+        </h1>
         <p className="text-sm text-subheading text-center mt-1">
           Score your matches ball by ball, live.
         </p>
@@ -59,7 +57,7 @@ const Login = () => {
         {existingId && mode === "login" && (
           <div className="mt-4 text-sm text-center bg-secondary rounded-xl p-3 text-heading">
             You are already signed in.{" "}
-            <Link to="/score" className="text-[#10b981] font-semibold">
+            <Link to="/score" className="text-emerald-500 font-semibold">
               Go to my matches →
             </Link>
           </div>
@@ -82,7 +80,7 @@ const Login = () => {
         <form onSubmit={submit} className="mt-6 space-y-4">
           {mode === "signup" && (
             <div>
-              <label htmlFor="fullName" className="text-sm font-semibold text-subheading">
+              <label htmlFor="fullName" className={labelCls}>
                 Full name
               </label>
               <input
@@ -97,7 +95,7 @@ const Login = () => {
             </div>
           )}
           <div>
-            <label htmlFor="email" className="text-sm font-semibold text-subheading">
+            <label htmlFor="email" className={labelCls}>
               Email
             </label>
             <input
@@ -112,7 +110,7 @@ const Login = () => {
             />
           </div>
           <div>
-            <label htmlFor="password" className="text-sm font-semibold text-subheading">
+            <label htmlFor="password" className={labelCls}>
               Password
             </label>
             <input
@@ -127,11 +125,7 @@ const Login = () => {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full min-h-12 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635] cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
-          >
+          <button type="submit" disabled={busy} className={`${primaryBtnCls} w-full`}>
             {mode === "login" ? <LogIn size={18} /> : <UserPlus size={18} />}
             {busy
               ? "Please wait…"
@@ -147,7 +141,7 @@ const Login = () => {
               New to CricScore?{" "}
               <button
                 type="button"
-                className="text-[#10b981] font-semibold cursor-pointer"
+                className="text-emerald-500 font-semibold cursor-pointer"
                 onClick={() => {
                   setMode("signup");
                   setError(null);
@@ -162,7 +156,7 @@ const Login = () => {
               Already have an account?{" "}
               <button
                 type="button"
-                className="text-[#10b981] font-semibold cursor-pointer"
+                className="text-emerald-500 font-semibold cursor-pointer"
                 onClick={() => {
                   setMode("login");
                   setError(null);

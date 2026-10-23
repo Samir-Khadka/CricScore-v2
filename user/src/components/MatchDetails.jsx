@@ -1,3 +1,5 @@
+import { fmtDate } from "../lib/formStyles";
+
 const MatchDetails = ({ match }) => {
   if (!match) {
     return (
@@ -15,9 +17,7 @@ const MatchDetails = ({ match }) => {
     <div className="mt-2 surface-card p-6 text-heading font-semibold">
       <div className="space-y-1">
         {match.venue && <p>Venue: {match.venue}</p>}
-        {match.match_date && (
-          <p>Date: {new Date(match.match_date).toDateString()}</p>
-        )}
+        {match.match_date && <p>Date: {fmtDate(match.match_date)}</p>}
         {match.match_time && <p>Time: {match.match_time}</p>}
         {onField && <p>Umpires: {onField}</p>}
         {umpires.third && <p>Third Umpire: {umpires.third}</p>}

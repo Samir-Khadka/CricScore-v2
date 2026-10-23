@@ -179,7 +179,7 @@ const ScorerMatches = () => {
             {tournaments.map((t) => (
               <div
                 key={t._id}
-                className="surface-card p-5 flex flex-col gap-3 transition-all duration-300 hover:-translate-y-0.5"
+                className="surface-card p-5 flex flex-col gap-3 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5"
               >
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-space font-bold text-lg text-heading leading-snug">
@@ -259,7 +259,7 @@ const ScorerMatches = () => {
               return (
                 <div
                   key={m._id}
-                  className="surface-card p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4 transition-all duration-300 hover:-translate-y-0.5"
+                  className="surface-card p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 flex-wrap">
@@ -277,7 +277,7 @@ const ScorerMatches = () => {
                       {m.match_date && (
                         <span>
                           <Calendar size={13} className="inline" />{" "}
-                          {new Date(m.match_date).toDateString()}
+                          {fmtDate(m.match_date)}
                         </span>
                       )}
                       {m.match_time && (

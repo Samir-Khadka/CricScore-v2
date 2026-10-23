@@ -5,7 +5,7 @@ import { AlertCircle, Inbox, Loader2 } from "lucide-react";
 export function Spinner({ label = "Loading…" }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-subheading">
-      <Loader2 className="animate-spin text-[#10b981]" size={32} />
+      <Loader2 className="animate-spin text-emerald-500" size={32} />
       <p className="text-sm font-medium">{label}</p>
     </div>
   );
@@ -19,11 +19,7 @@ export function ErrorBox({ message, onRetry }) {
         {message || "Something went wrong while loading."}
       </p>
       {onRetry && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="mt-1 px-5 py-2.5 rounded-full text-sm font-bold text-slate-950 bg-gradient-to-r from-emerald-500 to-lime-400 cursor-pointer shadow-lg shadow-emerald-500/25"
-        >
+        <button type="button" onClick={onRetry} className="btn-primary mt-1">
           Retry
         </button>
       )}
@@ -33,8 +29,8 @@ export function ErrorBox({ message, onRetry }) {
 
 export function EmptyBox({ message }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-14 px-4 text-center text-subheading">
-      <Inbox size={30} className="text-secondary" />
+    <div className="empty-panel flex flex-col items-center justify-center gap-3 py-12 px-4 text-center text-subheading">
+      <Inbox size={30} className="text-secondary" aria-hidden="true" />
       <p className="text-sm font-medium">{message}</p>
     </div>
   );

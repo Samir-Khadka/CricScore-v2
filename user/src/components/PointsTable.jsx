@@ -43,48 +43,43 @@ const PointsTable = ({ rows, loading, error, onRetry }) => {
 
   return (
     <div className="mt-2 overflow-x-auto">
-      <table className="w-full min-w-[660px] text-left tabular-nums">
-        <thead className="text-heading">
-          <tr className="border-b-2 border-secondary">
-            <th className="px-4 py-3">#</th>
-            <th className="px-4 py-3">Team</th>
-            <th className="px-4 py-3 text-center">P</th>
-            <th className="px-4 py-3 text-center">W</th>
-            <th className="px-4 py-3 text-center">L</th>
-            <th className="px-4 py-3 text-center">T</th>
-            <th className="px-4 py-3 text-center">Pts</th>
-            <th className="px-4 py-3 text-center">NRR</th>
-            <th className="px-4 py-3">Form</th>
+      <table className="data-table min-w-[660px]">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Team</th>
+            <th scope="col" className="num">P</th>
+            <th scope="col" className="num">W</th>
+            <th scope="col" className="num">L</th>
+            <th scope="col" className="num">T</th>
+            <th scope="col" className="num">Pts</th>
+            <th scope="col" className="num">NRR</th>
+            <th scope="col">Form</th>
           </tr>
         </thead>
         <tbody className="text-subheading">
           {rows.map((r, i) => (
-            <tr
-              key={r.teamId || r.team || i}
-              className="border-b border-secondary"
-            >
-              <td className="px-4 py-3 font-space">{i + 1}</td>
-              <td className="px-4 py-3 font-semibold text-heading">
+            <tr key={r.teamId || r.team || i}>
+              <td className="font-space">{i + 1}</td>
+              <td className="font-semibold text-heading">
                 <span className="flex items-center gap-2.5">
                   <TeamChip name={r.team} size="sm" />
                   {r.team}
                 </span>
               </td>
-              <td className="px-4 py-3 text-center font-space">{r.played}</td>
-              <td className="px-4 py-3 text-center font-space">{r.won}</td>
-              <td className="px-4 py-3 text-center font-space">{r.lost}</td>
-              <td className="px-4 py-3 text-center font-space">{r.tied}</td>
-              <td className="px-4 py-3 text-center font-space font-bold text-heading">
-                {r.points}
-              </td>
-              <td className="px-4 py-3 text-center font-space">
+              <td className="num">{r.played}</td>
+              <td className="num">{r.won}</td>
+              <td className="num">{r.lost}</td>
+              <td className="num">{r.tied}</td>
+              <td className="num font-bold text-heading">{r.points}</td>
+              <td className="num">
                 {typeof r.nrr === "number"
                   ? r.nrr > 0
                     ? `+${r.nrr.toFixed(3)}`
                     : r.nrr.toFixed(3)
                   : "—"}
               </td>
-              <td className="px-4 py-3 whitespace-nowrap">
+              <td className="whitespace-nowrap">
                 <FormChips form={r.form} />
               </td>
             </tr>

@@ -28,9 +28,16 @@ export function todayStr() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/** "Mon Oct 20 2026" style date, tolerant of bad input. */
+const dateFmt = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
+/** "Mon 20 Oct 2026" style date (Intl), tolerant of bad input. */
 export function fmtDate(d) {
   if (!d) return "";
   const dt = new Date(d);
-  return Number.isNaN(dt.getTime()) ? "" : dt.toDateString();
+  return Number.isNaN(dt.getTime()) ? "" : dateFmt.format(dt);
 }

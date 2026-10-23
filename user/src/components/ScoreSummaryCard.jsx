@@ -1,5 +1,5 @@
 import { MapPin } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   findInnings,
   inningsView,
@@ -11,14 +11,9 @@ import LiveDot from "./LiveDot";
 import TimelineItem from "./TimelineItem";
 
 const LiveCard = ({ data }) => {
-  const navigate = useNavigate();
   const teamAinn = findInnings(data, data?.teamA_id);
   const teamBinn = findInnings(data, data?.teamB_id);
   const format = matchFormat(data);
-
-  const handleClick = () => {
-    if (data?._id) navigate(`/match/${data._id}`);
-  };
 
   const scoreLine = (inn) =>
     inn ? (
@@ -54,20 +49,12 @@ const LiveCard = ({ data }) => {
   );
 
   return (
-    <div
-      className="surface-card group w-full md:w-[340px] overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_44px_-20px_rgba(0,0,0,0.45)]"
+    <Link
+      to={data?._id ? `/match/${data._id}` : "#"}
+      className="surface-card card-link block group w-full md:w-[340px] overflow-hidden"
       style={{
         borderLeftWidth: 3,
         borderLeftColor: teamColorHex(battingName),
-      }}
-      onClick={handleClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleClick();
-        }
       }}
     >
       {/* team colour bar */}
@@ -94,7 +81,7 @@ const LiveCard = ({ data }) => {
               <span className="truncate">{data?.venue}</span>
             </p>
           </div>
-          <span className="flex items-center gap-1.5 text-rose-500 text-[11px] font-black tracking-[0.14em] shrink-0 pt-0.5">
+          <span className="live-badge shrink-0 pt-0.5">
             <LiveDot />
             LIVE
           </span>
@@ -137,7 +124,7 @@ const LiveCard = ({ data }) => {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

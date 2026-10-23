@@ -4,7 +4,8 @@ import { Award, BarChart3, CalendarRange, MapPin } from "lucide-react";
 import ScheduleCard from "../components/ScheduleCard";
 import PointsTable from "../components/PointsTable";
 import TournamentStats from "../components/TournamentStats";
-import { ErrorBox, Spinner } from "../components/States";
+import { EmptyBox, ErrorBox, Spinner } from "../components/States";
+import { fmtDate } from "../lib/formStyles";
 import { api, unwrap } from "../lib/api";
 
 const TournamentInfo = () => {
@@ -175,10 +176,8 @@ const TournamentInfo = () => {
             {(t.start_date || t.end_date) && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 ring-1 ring-white/15 text-emerald-50 text-[12.5px] font-semibold px-3 py-1.5">
                 <CalendarRange size={13} />
-                {t.start_date ? new Date(t.start_date).toDateString() : ""}
-                {t.end_date
-                  ? ` — ${new Date(t.end_date).toDateString()}`
-                  : ""}
+                {fmtDate(t.start_date)}
+                {t.end_date ? ` — ${fmtDate(t.end_date)}` : ""}
               </span>
             )}
             {t.venue && (
@@ -202,20 +201,12 @@ const TournamentInfo = () => {
       </div>
 
       {/* tabs */}
-      <div
-        role="tablist"
-        aria-label="Tournament sections"
-        className="mt-8 inline-flex flex-row gap-1 p-1.5 rounded-2xl bg-secondary/50 ring-1 ring-black/5 dark:ring-white/10"
-      >
+      <div role="tablist" aria-label="Tournament sections" className="tab-bar mt-8">
         <button
           role="tab"
           aria-selected={tab === "fixtures"}
           onClick={() => setTab("fixtures")}
-          className={`px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all duration-200 ${
-            tab === "fixtures"
-              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
-              : "text-subheading hover:text-heading hover:bg-card/70"
-          }`}
+          className={`tab-item ${tab === "fixtures" ? "tab-item-active" : ""}`}
         >
           <CalendarRange size={16} /> Fixtures
         </button>
@@ -223,11 +214,7 @@ const TournamentInfo = () => {
           role="tab"
           aria-selected={tab === "points"}
           onClick={() => setTab("points")}
-          className={`px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all duration-200 ${
-            tab === "points"
-              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
-              : "text-subheading hover:text-heading hover:bg-card/70"
-          }`}
+          className={`tab-item ${tab === "points" ? "tab-item-active" : ""}`}
         >
           <Award size={16} /> Points Table
         </button>
@@ -235,11 +222,7 @@ const TournamentInfo = () => {
           role="tab"
           aria-selected={tab === "stats"}
           onClick={() => setTab("stats")}
-          className={`px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all duration-200 ${
-            tab === "stats"
-              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
-              : "text-subheading hover:text-heading hover:bg-card/70"
-          }`}
+          className={`tab-item ${tab === "stats" ? "tab-item-active" : ""}`}
         >
           <BarChart3 size={16} /> Stats
         </button>
@@ -255,7 +238,7 @@ const TournamentInfo = () => {
               onRetry={() => loadDetail(t._id)}
             />
           ) : !schedule || schedule.length === 0 ? (
-            <p className="text-subheading">No fixtures found.</p>
+            <EmptyBox message="No fixtures found." />
           ) : (
             <div className="flex flex-col space-y-5 items-center">
               {schedule.map((s) => (

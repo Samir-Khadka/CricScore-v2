@@ -64,14 +64,14 @@ const HeroSection = ({ featuredMatch, featuredDetail, featuredVariant }) => {
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <Link
               to={getScorerId() ? "/score" : "/login"}
-              className="inline-flex items-center gap-2 px-7 py-3.5 text-slate-950 rounded-full text-base font-bold bg-gradient-to-r from-emerald-500 to-lime-400 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-px active:translate-y-0 transition-all duration-300"
+              className="inline-flex items-center gap-2 px-7 py-3.5 text-slate-950 rounded-full text-base font-bold bg-gradient-to-r from-emerald-500 to-lime-400 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-px active:translate-y-0 transition-[transform,box-shadow] duration-300"
             >
               Start Scoring
               <ArrowRight size={18} />
             </Link>
             <Link
               to="/matches/live"
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-base font-bold text-heading bg-card ring-1 card-border hover:ring-emerald-500/50 transition-all duration-300"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-base font-bold text-heading bg-card ring-1 card-border hover:ring-emerald-500/50 transition-[transform,box-shadow] duration-300"
             >
               View Matches
             </Link>

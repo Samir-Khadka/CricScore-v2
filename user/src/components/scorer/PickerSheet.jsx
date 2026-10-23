@@ -72,7 +72,7 @@ export default function PickerSheet({
                 type="button"
                 disabled={isDisabled}
                 onClick={() => (multi ? onToggle?.(id) : onPick?.(id))}
-                className={`w-full min-h-14 px-4 py-3 rounded-xl flex items-center justify-between text-left border-2 transition-all ${
+                className={`w-full min-h-14 px-4 py-3 rounded-xl flex items-center justify-between text-left border-2 transition-colors ${
                   isDisabled
                     ? "opacity-40 cursor-not-allowed border-secondary"
                     : isSelected

@@ -412,6 +412,9 @@ const Match = () => {
     <div className="w-full min-h-screen flex flex-col items-center mt-6 md:mt-10 px-2">
       {/* live scorecard header — sticks under the navbar while scrolling */}
       <div className="sticky top-16 z-30 w-full max-w-5xl">
+        <h1 className="sr-only">
+          {match?.teamA} vs {match?.teamB} — live score & scorecard
+        </h1>
         <div className="glass surface-card p-4 shadow-xl">
         <div className="flex flex-row justify-between flex-wrap gap-2">
           <div
@@ -618,10 +621,8 @@ const Match = () => {
               role="tab"
               aria-selected={active}
               onClick={() => setSelectedTab(t.id)}
-              className={`flex-1 min-w-[110px] px-3 py-2.5 text-center rounded-xl cursor-pointer flex items-center justify-center gap-2 text-sm transition-all duration-200 ${
-                active
-                  ? "bg-emerald-600 text-white font-semibold shadow-md shadow-emerald-600/30"
-                  : "text-subheading font-medium hover:text-heading hover:bg-card/70"
+              className={`tab-item flex-1 min-w-[110px] ${
+                active ? "tab-item-active" : ""
               }`}
             >
               <Icon size={16} />
@@ -643,7 +644,7 @@ const Match = () => {
               <button
                 key={d?.inning?._id || i}
                 onClick={() => setInnIdx(i)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold cursor-pointer transition-all duration-200 ${
+                className={`px-4 py-2 rounded-full text-sm font-semibold cursor-pointer transition-colors duration-200 ${
                   innIdx === i
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/40"
                     : "bg-card text-subheading ring-1 ring-black/5 dark:ring-white/10 hover:text-heading"

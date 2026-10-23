@@ -1,17 +1,13 @@
 import { Calendar, Clock, MapPin, Trophy } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { findInnings, matchFormat, teamColorHex } from "../lib/cricket";
+import { fmtDate } from "../lib/formStyles";
 import TeamChip from "./TeamChip";
 
 const Recent = ({ data }) => {
-  const navigate = useNavigate();
   const teamAInning = findInnings(data, data?.teamA_id);
   const teamBInning = findInnings(data, data?.teamB_id);
   const format = matchFormat(data);
-
-  const handleClick = () => {
-    if (data?._id) navigate(`/match/${data._id}`);
-  };
 
   const winnerName =
     data?.winner === data?.teamA_id
@@ -48,18 +44,10 @@ const Recent = ({ data }) => {
   );
 
   return (
-    <div
-      className="surface-card w-full md:w-[340px] overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_44px_-20px_rgba(0,0,0,0.45)]"
+    <Link
+      to={data?._id ? `/match/${data._id}` : "#"}
+      className="surface-card card-link block w-full md:w-[340px] overflow-hidden"
       style={{ borderLeftWidth: 3, borderLeftColor: teamColorHex(winnerName) }}
-      onClick={handleClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleClick();
-        }
-      }}
     >
       {/* team colour bar */}
       <div className="flex h-1" aria-hidden="true">
@@ -99,7 +87,7 @@ const Recent = ({ data }) => {
         <div className="flex flex-row justify-between text-[11.5px] font-semibold text-secondary capitalize mt-auto">
           <span className="flex items-center gap-1.5">
             <Calendar size={12} />
-            {data?.match_date ? new Date(data.match_date).toDateString() : ""}
+            {fmtDate(data?.match_date)}
           </span>
           <span className="flex items-center gap-1.5">
             <Clock size={12} />
@@ -107,7 +95,7 @@ const Recent = ({ data }) => {
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

@@ -343,7 +343,7 @@ const ManageTournament = () => {
                           {m.match_date && (
                             <span>
                               <Calendar size={13} className="inline" />{" "}
-                              {new Date(m.match_date).toDateString()}
+                              {fmtDate(m.match_date)}
                             </span>
                           )}
                           {m.match_time && <span>{m.match_time}</span>}

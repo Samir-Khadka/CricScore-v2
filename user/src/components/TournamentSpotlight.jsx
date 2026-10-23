@@ -183,7 +183,7 @@ const TournamentSpotlight = ({
           <button
             type="button"
             onClick={go}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-emerald-950 text-sm font-bold shadow-lg hover:-translate-y-px transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-emerald-950 text-sm font-bold shadow-lg hover:-translate-y-px transition-[transform,box-shadow] cursor-pointer shrink-0"
           >
             Tournament hub
             <ArrowRight size={16} />

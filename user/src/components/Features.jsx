@@ -230,7 +230,7 @@ const Features = () => {
         return (
           <div
             key={p.title}
-            className="surface-card p-5 sm:p-6 flex flex-col transition-all duration-300 hover:-translate-y-1"
+            className="surface-card p-5 sm:p-6 flex flex-col transition-transform duration-300 hover:-translate-y-1"
           >
             <div className="flex items-start gap-3.5">
               <span

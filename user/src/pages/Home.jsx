@@ -18,7 +18,7 @@ import LiveCard from "../components/ScoreSummaryCard";
 import LiveDot from "../components/LiveDot";
 import UpcomingCard from "../components/Upcoming";
 import Recent from "../components/Recent";
-import { ErrorBox, SkeletonCard } from "../components/States";
+import { EmptyBox, ErrorBox, SkeletonCard } from "../components/States";
 import { api, homeSocket, unwrap } from "../lib/api";
 
 function SectionHeader({ icon, title, subtitle, onViewAll, count }) {
@@ -35,9 +35,7 @@ function SectionHeader({ icon, title, subtitle, onViewAll, count }) {
             {title}
           </h2>
           {count != null && count > 0 && (
-            <span className="font-space tabular-nums text-[11px] font-bold bg-secondary/70 text-subheading rounded-full px-2 py-0.5 ring-1 ring-black/5 dark:ring-white/10">
-              {count}
-            </span>
+            <span className="count-pill">{count}</span>
           )}
         </div>
         {subtitle && (
@@ -49,7 +47,7 @@ function SectionHeader({ icon, title, subtitle, onViewAll, count }) {
       {onViewAll && (
         <button
           type="button"
-          className="text-sm font-semibold text-secondary cursor-pointer p-2 rounded-xl hover:text-[#10b981] transition-all shrink-0"
+          className="text-sm font-semibold text-secondary cursor-pointer p-2 rounded-xl hover:text-emerald-500 transition-colors shrink-0"
           onClick={onViewAll}
         >
           View All <MoveRight className="inline-block" size={16} />
@@ -71,7 +69,11 @@ function MatchGrid({ loading, error, onRetry, items, render, emptyText }) {
   }
   if (error) return <ErrorBox message={error} onRetry={onRetry} />;
   if (!items || items.length === 0) {
-    return <p className="text-subheading mt-5 px-1">{emptyText}</p>;
+    return (
+      <div className="mt-5">
+        <EmptyBox message={emptyText} />
+      </div>
+    );
   }
   return (
     <div className="flex flex-row flex-wrap gap-5 justify-center lg:justify-start mt-5">

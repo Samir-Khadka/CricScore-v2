@@ -45,13 +45,13 @@ const Scorecard = ({ teamName, view }) => {
         <table className="w-full min-w-[560px] mt-2 border-b card-border tabular-nums">
           <thead className="text-heading text-left text-xs uppercase tracking-wider">
             <tr>
-              <th className="px-6">Batting</th>
-              <th>&nbsp;</th>
-              <th>R</th>
-              <th className="px-2">B</th>
-              <th className="px-2">4s</th>
-              <th className="px-2">6s</th>
-              <th className="px-2">SR</th>
+              <th className="px-6 py-2.5">Batting</th>
+              <th className="py-2.5">&nbsp;</th>
+              <th className="px-2 py-2.5 text-right">R</th>
+              <th className="px-2 py-2.5 text-right">B</th>
+              <th className="px-2 py-2.5 text-right">4s</th>
+              <th className="px-2 py-2.5 text-right">6s</th>
+              <th className="px-2 py-2.5 pr-6 text-right">SR</th>
             </tr>
           </thead>
           <tbody className="text-subheading">
@@ -65,7 +65,10 @@ const Scorecard = ({ teamName, view }) => {
             {batsmen.map((s, i) => {
               const isStriker = strikerId && String(s.id) === strikerId;
               return (
-                <tr key={s.id || i} className={s.batting ? "font-medium" : ""}>
+                <tr
+                  key={s.id || i}
+                  className={`row-hover transition-colors ${s.batting ? "font-medium" : ""}`}
+                >
                   <td className="px-6 py-3 border-b card-border text-heading">
                     {s.name}
                     {isStriker ? " *" : ""}
@@ -77,19 +80,19 @@ const Scorecard = ({ teamName, view }) => {
                         ? "retired hurt"
                         : s.howOut}
                   </td>
-                  <td className="p-2 border-b card-border font-space">
+                  <td className="p-2 border-b card-border font-space text-right">
                     {s.runs}
                   </td>
-                  <td className="p-2 border-b card-border font-space">
+                  <td className="p-2 border-b card-border font-space text-right">
                     {s.balls}
                   </td>
-                  <td className="p-2 border-b card-border font-space">
+                  <td className="p-2 border-b card-border font-space text-right">
                     {s.fours}
                   </td>
-                  <td className="p-2 border-b card-border font-space">
+                  <td className="p-2 border-b card-border font-space text-right">
                     {s.sixes}
                   </td>
-                  <td className="p-2 border-b card-border font-space">
+                  <td className="p-2 pr-6 border-b card-border font-space text-right">
                     {fmt2(s.sr)}
                   </td>
                 </tr>
@@ -137,14 +140,14 @@ const Scorecard = ({ teamName, view }) => {
         <table className="w-full min-w-[560px] mt-4 tabular-nums">
           <thead className="text-heading text-left text-xs uppercase tracking-wider">
             <tr>
-              <th className="px-6">Bowling</th>
-              <th>O</th>
-              <th>M</th>
-              <th>R</th>
-              <th>W</th>
-              <th>Econ</th>
-              <th>NB</th>
-              <th>WD</th>
+              <th className="px-6 py-2.5">Bowling</th>
+              <th className="px-2 py-2.5 text-right">O</th>
+              <th className="px-2 py-2.5 text-right">M</th>
+              <th className="px-2 py-2.5 text-right">R</th>
+              <th className="px-2 py-2.5 text-right">W</th>
+              <th className="px-2 py-2.5 text-right">Econ</th>
+              <th className="px-2 py-2.5 text-right">NB</th>
+              <th className="px-2 py-2.5 pr-6 text-right">WD</th>
             </tr>
           </thead>
           <tbody className="text-subheading">
@@ -156,29 +159,29 @@ const Scorecard = ({ teamName, view }) => {
               </tr>
             )}
             {bowlers.map((s, i) => (
-              <tr key={s.id || i}>
+              <tr key={s.id || i} className="row-hover transition-colors">
                 <td className="px-6 py-2 border-b card-border text-heading">
                   {s.name}
                 </td>
-                <td className="p-2 border-b card-border font-space">
+                <td className="p-2 border-b card-border font-space text-right">
                   {s.oversText}
                 </td>
-                <td className="p-2 border-b card-border font-space">
+                <td className="p-2 border-b card-border font-space text-right">
                   {s.maidens}
                 </td>
-                <td className="p-2 border-b card-border font-space">
+                <td className="p-2 border-b card-border font-space text-right">
                   {s.runsConceded}
                 </td>
-                <td className="p-2 border-b card-border font-space">
+                <td className="p-2 border-b card-border font-space text-right">
                   {s.wickets}
                 </td>
-                <td className="p-2 border-b card-border font-space">
+                <td className="p-2 border-b card-border font-space text-right">
                   {fmt2(s.economy)}
                 </td>
-                <td className="p-2 border-b card-border font-space">
+                <td className="p-2 border-b card-border font-space text-right">
                   {s.noBall}
                 </td>
-                <td className="p-2 border-b card-border font-space">
+                <td className="p-2 pr-6 border-b card-border font-space text-right">
                   {s.wide}
                 </td>
               </tr>
@@ -186,7 +189,7 @@ const Scorecard = ({ teamName, view }) => {
           </tbody>
         </table>
       </div>
-      &nbsp;
+      <div className="pb-2" aria-hidden="true" />
     </div>
   );
 };

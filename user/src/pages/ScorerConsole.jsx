@@ -441,7 +441,7 @@ const ScorerConsole = () => {
       type="button"
       onClick={onTap}
       disabled={disabled}
-      className="w-full min-h-14 px-4 py-2 rounded-xl bg-card ring-1 ring-black/5 dark:ring-white/10 shadow-sm hover:ring-emerald-500/40 flex items-center justify-between text-left cursor-pointer disabled:cursor-default transition-all duration-200"
+      className="w-full min-h-14 px-4 py-2 rounded-xl bg-card ring-1 ring-black/5 dark:ring-white/10 shadow-sm hover:ring-emerald-500/40 flex items-center justify-between text-left cursor-pointer disabled:cursor-default transition-[background-color,color,box-shadow] duration-200"
     >
       <span>
         <span className="block text-[11px] uppercase tracking-wider text-secondary font-bold">
@@ -503,7 +503,7 @@ const ScorerConsole = () => {
               setPostError(null);
               if (!inningsByNum[n]) loadInnings(n);
             }}
-            className={`min-h-11 rounded-xl font-bold cursor-pointer text-sm transition-all duration-200 ${
+            className={`min-h-11 rounded-xl font-bold cursor-pointer text-sm transition-[background-color,color,box-shadow] duration-200 ${
               inningNumber === n
                 ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
                 : "text-subheading hover:text-heading"
