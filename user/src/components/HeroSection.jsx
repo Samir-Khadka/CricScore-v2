@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, TableProperties, TrendingUp, Zap } from "lucide-react";
 import { getScorerId } from "../lib/api";
 import FeaturedMatch, { FeaturedMatchMock } from "./FeaturedMatch";
+import LiveDot from "./LiveDot";
 
 const CAPABILITIES = [
   {
@@ -30,7 +31,7 @@ const CAPABILITIES = [
 const HeroSection = ({ featuredMatch, featuredDetail, featuredVariant }) => {
   return (
     <div className="relative">
-      {/* ambient glows */}
+      {/* ambient glows + floodlight beams */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-24 -left-32 h-96 w-96 rounded-full bg-emerald-500/15 blur-3xl animate-drift"
@@ -38,6 +39,14 @@ const HeroSection = ({ featuredMatch, featuredDetail, featuredVariant }) => {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute top-20 right-0 h-80 w-80 rounded-full bg-lime-400/10 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 left-[38%] h-[420px] w-24 rotate-[16deg] bg-gradient-to-b from-emerald-200/10 via-emerald-300/5 to-transparent blur-xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 right-[6%] h-[420px] w-24 -rotate-[14deg] bg-gradient-to-b from-lime-200/10 via-lime-300/5 to-transparent blur-xl"
       />
 
       <div className="relative grid lg:grid-cols-[1.02fr_0.98fr] gap-10 lg:gap-12 items-center py-8 lg:py-12">
@@ -48,7 +57,7 @@ const HeroSection = ({ featuredMatch, featuredDetail, featuredVariant }) => {
             Live scoring platform
           </span>
 
-          <h1 className="mt-5 font-condensed font-bold uppercase leading-[0.92] tracking-tight text-heading text-[56px] sm:text-7xl xl:text-[92px]">
+          <h1 className="mt-5 font-condensed font-extrabold uppercase leading-[0.9] tracking-tight text-heading text-[60px] sm:text-8xl xl:text-[104px]">
             Local cricket.
             <span className="block heading-gradient drop-shadow-[0_0_24px_rgba(16,185,129,0.25)]">
               Broadcast live.
@@ -84,10 +93,12 @@ const HeroSection = ({ featuredMatch, featuredDetail, featuredVariant }) => {
               return (
                 <div key={c.title} className="min-w-[140px]">
                   <p className="flex items-center gap-2 font-condensed font-semibold text-[19px] tracking-wide text-heading">
-                    <Icon size={17} className="text-emerald-500" />
+                    <span className="grid place-items-center h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-500/25 to-lime-400/15 ring-1 ring-emerald-500/30 shrink-0">
+                      <Icon size={15} className="text-emerald-500" />
+                    </span>
                     {c.title}
                   </p>
-                  <p className="text-[12.5px] text-secondary mt-1 font-inter">
+                  <p className="text-[12.5px] text-secondary mt-1.5 pl-9 font-inter">
                     {c.caption}
                   </p>
                 </div>
@@ -102,6 +113,21 @@ const HeroSection = ({ featuredMatch, featuredDetail, featuredVariant }) => {
             aria-hidden="true"
             className="absolute -inset-3 rounded-[28px] bg-gradient-to-br from-emerald-500/15 via-transparent to-lime-400/10 blur-xl"
           />
+          {featuredVariant === "live" && featuredMatch && (
+            <div className="relative flex items-center gap-2.5 mb-3 px-1">
+              <span className="live-badge">
+                <LiveDot /> LIVE NOW
+              </span>
+              <span className="text-[13px] font-bold text-heading truncate">
+                {featuredMatch.teamA} vs {featuredMatch.teamB}
+              </span>
+              {featuredMatch.tournament_name && (
+                <span className="text-[12px] font-semibold text-secondary truncate hidden sm:block">
+                  · {featuredMatch.tournament_name}
+                </span>
+              )}
+            </div>
+          )}
           <div className="relative">
             {featuredMatch ? (
               <FeaturedMatch

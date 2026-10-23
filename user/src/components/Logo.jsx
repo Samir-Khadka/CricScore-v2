@@ -60,7 +60,7 @@ const Logo = ({ size = 36, wordmarkClass = "text-[22px]" }) => (
   <span className="inline-flex items-center gap-2.5">
     <LogoMark size={size} />
     <span
-      className={`${wordmarkClass} leading-none font-space font-bold tracking-tight text-heading`}
+      className={`${wordmarkClass} leading-none font-display font-extrabold tracking-tight text-heading`}
     >
       Cric<span className="text-emerald-500">Score</span>
     </span>

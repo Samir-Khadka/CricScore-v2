@@ -45,7 +45,7 @@ const HowItWorks = () => {
                 {s.step}
               </span>
             </div>
-            <p className="mt-4 font-condensed font-semibold text-[22px] tracking-wide text-heading">
+            <p className="mt-4 font-condensed font-bold text-[22px] tracking-wide text-heading">
               {s.title}
             </p>
             <p className="mt-1.5 text-[13.5px] leading-relaxed text-subheading">

@@ -5,38 +5,57 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ------------------------------------------------------------------ */
-/* CricScore design system — dark-first premium sports theme.          */
-/* Deep zinc/slate surfaces, one vivid emerald accent (lime highlight) */
+/* CricScore design system — "Floodlit Night Match".                   */
+/* Deep green-charcoal arena surfaces, pitch-stripe atmosphere, one    */
+/* vivid emerald accent with a lime floodlight highlight.              */
 /* ------------------------------------------------------------------ */
 
 :root {
     color-scheme: light;
-    --color-body: #f3f5f7;
+    --color-body: #edf3ee;
     --color-card: #ffffff;
-    --color-secondary-bg: #e8edf3;
-    --color-border-secondary: #d7dee8;
-    --color-heading: #0a1120;
-    --color-subheading: #4b5a70;
+    --color-secondary-bg: #e0ebe2;
+    --color-border-secondary: #ccdccf;
+    --color-heading: #08130c;
+    --color-subheading: #43584a;
     /* Meta text tone — tuned to hold WCAG AA (≥4.5:1) on card + body. */
-    --color-secondary: #5d7089;
-    --color-card-border: rgba(10, 17, 32, 0.09);
-    --color-ring-soft: rgba(10, 17, 32, 0.06);
+    --color-secondary: #52705e;
+    --color-card-border: rgba(8, 25, 14, 0.1);
+    --color-ring-soft: rgba(8, 25, 14, 0.06);
     --color-accent: #059669;
+    /* Gradient card edge (border-box layer of .surface-card). */
+    --card-edge-from: rgba(8, 25, 14, 0.16);
+    --card-edge-mid: rgba(8, 25, 14, 0.05);
+    --card-edge-to: rgba(5, 150, 105, 0.2);
+    /* Atmosphere layer (body::before). */
+    --atmo-stripe: rgba(6, 40, 22, 0.045);
+    --atmo-glow: rgba(16, 185, 129, 0.1);
+    --atmo-glow2: rgba(163, 230, 53, 0.06);
+    --atmo-vignette: rgba(6, 40, 22, 0.05);
 }
 
 .dark {
     color-scheme: dark;
-    --color-body: #07090c;
-    --color-card: #10141b;
-    --color-secondary-bg: #171d28;
-    --color-border-secondary: #232c3d;
-    --color-heading: #eef2f7;
-    --color-subheading: #9aa9bf;
+    --color-body: #060a08;
+    --color-card: #0c1511;
+    --color-secondary-bg: #14231a;
+    --color-border-secondary: #21392a;
+    --color-heading: #ecf6ee;
+    --color-subheading: #9db8a7;
     /* Meta text tone — tuned to hold WCAG AA (≥4.5:1) on card + body. */
-    --color-secondary: #8498b3;
+    --color-secondary: #87a892;
     --color-card-border: rgba(255, 255, 255, 0.08);
     --color-ring-soft: rgba(255, 255, 255, 0.1);
     --color-accent: #10b981;
+    /* Gradient card edge (border-box layer of .surface-card). */
+    --card-edge-from: rgba(255, 255, 255, 0.18);
+    --card-edge-mid: rgba(255, 255, 255, 0.05);
+    --card-edge-to: rgba(163, 230, 53, 0.16);
+    /* Atmosphere layer (body::before). */
+    --atmo-stripe: rgba(190, 242, 205, 0.028);
+    --atmo-glow: rgba(16, 185, 129, 0.15);
+    --atmo-glow2: rgba(163, 230, 53, 0.09);
+    --atmo-vignette: rgba(0, 0, 0, 0.42);
 }
 
 body {
@@ -45,6 +64,41 @@ body {
     color: var(--color-heading);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+}
+
+/* Atmosphere: fixed floodlight glows + mowed pitch stripes + a soft
+   vignette, painted once behind everything (no DOM, no JS). Stripe
+   bands alternate like a cut outfield; the vignette pools darkness at
+   the foot of the page in the dark theme. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(
+            56rem 30rem at 12% -12%,
+            var(--atmo-glow),
+            transparent 62%
+        ),
+        radial-gradient(
+            44rem 26rem at 88% -8%,
+            var(--atmo-glow2),
+            transparent 60%
+        ),
+        radial-gradient(
+            120% 70% at 50% 118%,
+            var(--atmo-vignette),
+            transparent 60%
+        ),
+        repeating-linear-gradient(
+            90deg,
+            var(--atmo-stripe) 0,
+            var(--atmo-stripe) 76px,
+            transparent 76px,
+            transparent 152px
+        );
 }
 
 html {
@@ -111,12 +165,17 @@ h3 {
 }
 
 .dark .heading-gradient {
-    background-image: linear-gradient(92deg, #34d399 0%, #a3e635 100%);
+    background-image: linear-gradient(
+        92deg,
+        #34d399 0%,
+        #a3e635 58%,
+        #fde047 115%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    text-shadow: 0 0 22px rgba(52, 211, 153, 0.16);
+    text-shadow: 0 0 26px rgba(52, 211, 153, 0.18);
 }
 
 /* ---------------------------- motion ------------------------------- */
@@ -160,6 +219,19 @@ h3 {
     }
     to {
         opacity: 1;
+    }
+}
+
+/* Cards rise a breath as they mount (killed by the reduced-motion
+   block below, like every other ambient animation). */
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
@@ -207,10 +279,16 @@ h3 {
         font-family: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
     }
 
-    /* Condensed display face for broadcast-style scores and headlines. */
+    /* Condensed display face for broadcast-style headlines/team names. */
     .font-condensed {
         font-family: 'Barlow Condensed', 'Space Grotesk', 'Inter', ui-sans-serif,
             sans-serif;
+    }
+
+    /* Heavy grotesque for giant score numerals (hero, match header). */
+    .font-display {
+        font-family: 'Archivo', 'Inter', ui-sans-serif, system-ui, sans-serif;
+        letter-spacing: -0.015em;
     }
 
     /* Horizontal strips (live ticker) scroll without a visible bar. */
@@ -277,27 +355,100 @@ h3 {
         border-color: var(--color-border-secondary);
     }
 
-    /* Standard content card: soft ring border + layered soft shadow. */
+    /* Standard content card: gradient edge (border-box layer), deep
+       layered shadow, and a gentle rise as it mounts. --card-bg-alpha
+       lets .glass combos stay translucent (see .glass below). */
     .surface-card {
-        background-color: var(--color-card);
-        border: 1px solid var(--color-card-border);
+        --card-bg-alpha: 1;
+        background:
+            linear-gradient(
+                    color-mix(
+                        in srgb,
+                        var(--color-card) calc(var(--card-bg-alpha) * 100%),
+                        transparent
+                    ),
+                    color-mix(
+                        in srgb,
+                        var(--color-card) calc(var(--card-bg-alpha) * 100%),
+                        transparent
+                    )
+                )
+                padding-box,
+            linear-gradient(
+                    158deg,
+                    var(--card-edge-from),
+                    var(--card-edge-mid) 45%,
+                    var(--card-edge-to)
+                )
+                border-box;
+        border: 1px solid transparent;
         border-radius: 1rem;
         box-shadow:
             0 1px 2px rgba(2, 6, 23, 0.05),
-            0 12px 32px -20px rgba(2, 6, 23, 0.28);
+            0 14px 34px -20px rgba(2, 6, 23, 0.3);
+        animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
     }
 
     .dark .surface-card {
         box-shadow:
-            0 1px 2px rgba(0, 0, 0, 0.55),
-            0 18px 44px -22px rgba(0, 0, 0, 0.85);
+            inset 0 1px 0 rgba(255, 255, 255, 0.045),
+            0 1px 2px rgba(0, 0, 0, 0.6),
+            0 22px 48px -22px rgba(0, 0, 0, 0.9);
     }
 
-    /* Translucent, blurred surface for sticky chrome (nav, score bar). */
+    /* Translucent, blurred surface for sticky chrome (nav, score bar,
+       bottom nav). When combined with .surface-card it also thins the
+       card fill so the glass stays glassy under the gradient edge. */
     .glass {
+        --card-bg-alpha: 0.45;
         background-color: color-mix(in srgb, var(--color-card) 76%, transparent);
-        -webkit-backdrop-filter: blur(16px) saturate(1.5);
-        backdrop-filter: blur(16px) saturate(1.5);
+        -webkit-backdrop-filter: blur(18px) saturate(1.6);
+        backdrop-filter: blur(18px) saturate(1.6);
+    }
+
+    /* Extra halo for cards carrying a live match: a rose ring + glow
+       that reads as "on air" from across the page. */
+    .live-glow {
+        box-shadow:
+            0 0 0 1px rgba(244, 63, 94, 0.22),
+            0 24px 54px -22px rgba(244, 63, 94, 0.38),
+            0 18px 44px -22px rgba(2, 6, 23, 0.4);
+    }
+    .dark .live-glow {
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.045),
+            0 0 0 1px rgba(251, 113, 133, 0.3),
+            0 0 38px -6px rgba(244, 63, 94, 0.38),
+            0 24px 54px -22px rgba(0, 0, 0, 0.9);
+    }
+
+    /* Innings progress (overs bowled of the match allocation). */
+    .progress-track {
+        height: 0.375rem;
+        border-radius: 999px;
+        background-color: color-mix(
+            in srgb,
+            var(--color-secondary-bg) 80%,
+            transparent
+        );
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background-image: linear-gradient(90deg, #059669, #a3e635);
+        box-shadow: 0 0 10px rgba(163, 230, 53, 0.45);
+        transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* App-style bottom navigation bar (small screens). */
+    .bottom-nav {
+        background-color: color-mix(in srgb, var(--color-card) 84%, transparent);
+        -webkit-backdrop-filter: blur(18px) saturate(1.6);
+        backdrop-filter: blur(18px) saturate(1.6);
+        border-top: 1px solid var(--color-card-border);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        box-shadow: 0 -12px 32px -18px rgba(0, 0, 0, 0.45);
     }
 
     /* Score figures pop once when they change (remount via key={value}). */
@@ -349,10 +500,11 @@ h3 {
         font-size: 0.875rem;
         font-weight: 700;
         color: #02120a;
-        background-image: linear-gradient(to right, #10b981, #a3e635);
+        background-image: linear-gradient(92deg, #10b981, #84cc16);
         box-shadow:
-            0 10px 15px -3px rgba(16, 185, 129, 0.25),
-            0 4px 6px -4px rgba(16, 185, 129, 0.25);
+            0 10px 22px -6px rgba(16, 185, 129, 0.45),
+            0 4px 10px -4px rgba(132, 204, 22, 0.35),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
         cursor: pointer;
         transition:
             transform 0.25s ease,
@@ -453,27 +605,40 @@ h3 {
         }
     }
     .tab-item-active {
-        background-color: #059669;
+        background-color: #047857;
         color: #ffffff;
-        box-shadow: 0 6px 14px -4px rgba(5, 150, 105, 0.45);
+        box-shadow:
+            0 8px 18px -6px rgba(4, 120, 87, 0.55),
+            inset 0 1px 0 rgba(255, 255, 255, 0.18);
     }
     @media (hover: hover) {
         .tab-item-active:hover {
             color: #ffffff;
-            background-color: #059669;
+            background-color: #047857;
         }
     }
 
-    /* Rose LIVE label (dot is a separate <LiveDot/>). */
+    /* Rose LIVE pill (dot is a separate <LiveDot/>). Filled tint + ring
+       + halo so it reads as an "on air" light; text tone holds AA on
+       the tint in both themes (rose-700 light / rose-300 dark). */
     .live-badge {
         display: inline-flex;
         align-items: center;
         gap: 0.375rem;
-        color: #f43f5e;
+        padding: 0.3rem 0.6rem;
+        border-radius: 999px;
+        background-color: rgba(244, 63, 94, 0.12);
+        box-shadow:
+            inset 0 0 0 1px rgba(244, 63, 94, 0.35),
+            0 0 14px -2px rgba(244, 63, 94, 0.45);
+        color: #be123c;
         font-size: 11px;
         font-weight: 900;
         letter-spacing: 0.14em;
         white-space: nowrap;
+    }
+    .dark .live-badge {
+        color: #fda4af;
     }
 
     /* Clickable card lift — transform/box-shadow only (compositor).
@@ -487,6 +652,12 @@ h3 {
         .card-link:hover {
             transform: translateY(-4px);
             box-shadow: 0 24px 44px -20px rgba(0, 0, 0, 0.45);
+        }
+        .dark .card-link:hover {
+            box-shadow:
+                0 24px 48px -20px rgba(0, 0, 0, 0.8),
+                0 0 0 1px rgba(52, 211, 153, 0.2),
+                0 14px 36px -12px rgba(16, 185, 129, 0.3);
         }
     }
 

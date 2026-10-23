@@ -239,7 +239,7 @@ const Features = () => {
                 <Icon size={21} />
               </span>
               <div>
-                <p className="font-condensed font-semibold text-[22px] leading-tight tracking-wide text-heading">
+                <p className="font-condensed font-bold text-[22px] leading-tight tracking-wide text-heading">
                   {p.title}
                 </p>
                 <p className="mt-1 text-[13.5px] leading-relaxed text-subheading">

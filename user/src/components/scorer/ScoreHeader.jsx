@@ -33,9 +33,9 @@ function ScoreHeader({
     )}
   </div>
   <div className="flex items-end justify-between mt-2 flex-wrap gap-2">
-    <p className="font-space font-black text-4xl text-heading tabular-nums">
+    <p className="font-display font-black text-[38px] leading-none text-heading tabular-nums">
       {view?.runs}/{view?.wickets}
-      <span className="text-lg text-subheading font-semibold ml-2">
+      <span className="text-lg text-subheading font-bold ml-2 font-inter">
         ({view?.oversText} ov)
       </span>
     </p>

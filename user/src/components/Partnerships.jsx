@@ -9,12 +9,15 @@ import { Users } from "lucide-react";
 const Partnerships = ({ partnerships }) => {
   const list = partnerships || [];
   if (list.length === 0) return null;
+  const maxRuns = Math.max(...list.map((p) => p.runs || 0), 1);
 
   return (
     <div className="w-full surface-card overflow-hidden">
       <div className="px-5 py-4 border-b card-border flex items-center gap-2">
         <Users size={18} className="text-emerald-500" />
-        <p className="text-lg text-heading font-bold">Partnerships</p>
+        <p className="font-condensed font-bold uppercase tracking-wide text-[22px] text-heading">
+          Partnerships
+        </p>
       </div>
       <ul>
         {list.map((p) => {
@@ -31,7 +34,7 @@ const Partnerships = ({ partnerships }) => {
               key={`${a?.id || a?.name || "?"}-${b?.id || b?.name || "?"}-${p.wicket ?? "ongoing"}`}
               className="flex items-center justify-between gap-3 px-5 py-3 border-b card-border last:border-b-0"
             >
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-heading font-semibold truncate">
                   {a?.name || "—"}
                   <span className="text-secondary font-normal"> &amp; </span>
@@ -44,10 +47,19 @@ const Partnerships = ({ partnerships }) => {
                     {status.text}
                   </span>
                 )}
+                {/* stand size relative to the biggest partnership */}
+                <div className="progress-track mt-2 max-w-[240px]" aria-hidden="true">
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${Math.max(4, Math.round(((p.runs || 0) / maxRuns) * 100))}%`,
+                    }}
+                  />
+                </div>
               </div>
-              <p className="font-space font-bold text-lg text-heading tabular-nums shrink-0">
+              <p className="font-display font-extrabold text-[22px] leading-none text-heading tabular-nums shrink-0">
                 {p.runs}
-                <span className="text-sm text-subheading font-semibold">
+                <span className="text-sm text-subheading font-bold font-inter">
                   {" "}
                   ({p.balls})
                 </span>

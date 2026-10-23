@@ -143,13 +143,21 @@ const WormChart = ({ series }) => {
             .map((p) => `${x(p.over)},${y(p.runs)}`)
             .join(" ");
           const last = s.points[s.points.length - 1];
+          const first = s.points[0];
+          const area = [
+            `M ${x(first.over)},${y(0)}`,
+            ...s.points.map((p) => `L ${x(p.over)},${y(p.runs)}`),
+            `L ${x(last.over)},${y(0)}`,
+            "Z",
+          ].join(" ");
           return (
             <g key={s.name}>
+              <path d={area} fill={s.color} opacity="0.09" />
               <polyline
                 points={pts}
                 fill="none"
                 stroke={s.color}
-                strokeWidth="2.5"
+                strokeWidth="3"
                 strokeLinejoin="round"
                 strokeLinecap="round"
               />
@@ -170,7 +178,14 @@ const WormChart = ({ series }) => {
                   : null
               )}
               {/* end point + total */}
-              <circle cx={x(last.over)} cy={y(last.runs)} r="4" fill={s.color} />
+              <circle
+                cx={x(last.over)}
+                cy={y(last.runs)}
+                r="4.5"
+                fill={s.color}
+                stroke="var(--color-card)"
+                strokeWidth="2"
+              />
               <text
                 x={x(last.over) + 8}
                 y={y(last.runs) + 4}

@@ -72,17 +72,22 @@ const FeaturedMatch = ({ match, detail, variant }) => {
   }
 
   const battingId = activeView?.battingTeam;
+  // Innings progress for the live hero: overs bowled of the allocation.
+  const progressPct =
+    isLive && format && activeView
+      ? Math.min(100, Math.round((activeView.legalBalls / (format * 6)) * 100))
+      : null;
   const scoreRow = (name, id, view) => (
     <div
-      className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl ${
+      className={`flex items-center justify-between gap-3 px-3 py-3 rounded-2xl ${
         isLive && battingId && String(battingId) === String(id)
-          ? "bg-emerald-500/[0.07] ring-1 ring-emerald-500/15"
+          ? "bg-emerald-500/[0.07] ring-1 ring-emerald-500/20"
           : ""
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <TeamChip name={name} size="lg" />
-        <span className="font-condensed font-semibold text-[22px] tracking-wide text-heading truncate">
+        <TeamChip name={name} size="xl" />
+        <span className="font-condensed font-bold uppercase text-[26px] leading-none tracking-wide text-heading truncate">
           {name}
         </span>
         {isLive && battingId && String(battingId) === String(id) && (
@@ -93,12 +98,12 @@ const FeaturedMatch = ({ match, detail, variant }) => {
         <div className="text-right shrink-0">
           <span
             key={`${view.runs}/${view.wickets}`}
-            className="animate-score-pop inline-block font-condensed font-bold text-[34px] leading-none tabular-nums text-heading"
+            className="animate-score-pop inline-block font-display font-black text-[42px] sm:text-[50px] leading-none tabular-nums text-heading"
           >
             {view.runs}
-            <span className="text-subheading">/{view.wickets}</span>
+            <span className="text-subheading font-extrabold">/{view.wickets}</span>
           </span>
-          <span className="block text-[12px] font-semibold text-subheading tabular-nums mt-0.5">
+          <span className="block text-[12px] font-bold text-subheading tabular-nums mt-1">
             {view.oversText}
             {format ? `/${format}` : ""} overs
           </span>
@@ -119,19 +124,18 @@ const FeaturedMatch = ({ match, detail, variant }) => {
   return (
     <Link
       to={m._id ? `/match/${m._id}` : "#"}
-      className="surface-card card-link block overflow-hidden group"
+      className={`surface-card card-link block overflow-hidden group ${
+        isLive ? "live-glow" : ""
+      }`}
     >
-      {/* team colour bar */}
-      <div className="flex h-1.5" aria-hidden="true">
-        <div
-          className="flex-1"
-          style={{ backgroundColor: teamColorHex(m.teamA) }}
-        />
-        <div
-          className="flex-1"
-          style={{ backgroundColor: teamColorHex(m.teamB) }}
-        />
-      </div>
+      {/* team colour bar — the two colours meet mid-card */}
+      <div
+        className="h-1.5"
+        aria-hidden="true"
+        style={{
+          backgroundImage: `linear-gradient(90deg, ${teamColorHex(m.teamA)} 0%, ${teamColorHex(m.teamA)} 42%, ${teamColorHex(m.teamB)} 58%, ${teamColorHex(m.teamB)} 100%)`,
+        }}
+      />
 
       <div className="p-4 sm:p-5">
         {/* header */}
@@ -146,11 +150,11 @@ const FeaturedMatch = ({ match, detail, variant }) => {
             </p>
           </div>
           {isLive ? (
-            <span className="live-badge shrink-0 pt-0.5">
+            <span className="live-badge shrink-0">
               <LiveDot /> LIVE
             </span>
           ) : (
-            <span className="text-[11px] font-black tracking-[0.16em] text-secondary shrink-0 pt-0.5">
+            <span className="text-[11px] font-black tracking-[0.16em] text-secondary shrink-0 pt-1.5">
               RESULT
             </span>
           )}
@@ -162,10 +166,33 @@ const FeaturedMatch = ({ match, detail, variant }) => {
           {scoreRow(m.teamB, m.teamB_id, teamBView)}
         </div>
 
+        {/* innings progress */}
+        {progressPct !== null && (
+          <div className="mt-3.5 px-1">
+            <div
+              className="progress-track"
+              role="img"
+              aria-label={`Innings progress: over ${activeView.oversText} of ${format}, ${progressPct} percent bowled`}
+            >
+              <div
+                className="progress-fill"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <p className="mt-1.5 text-[11px] font-bold uppercase tracking-wider text-secondary tabular-nums">
+              Over {activeView.oversText} of {format} · {progressPct}% bowled
+            </p>
+          </div>
+        )}
+
         {/* status line */}
         {isLive && activeView && (
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t card-border pt-3 text-[13px] font-semibold text-subheading tabular-nums">
-            {chaseLine && <span className="text-heading">{chaseLine}</span>}
+            {chaseLine && (
+              <span className="font-bold text-emerald-700 dark:text-lime-300">
+                {chaseLine}
+              </span>
+            )}
             <span>
               CRR{" "}
               <span className="text-heading font-space">
@@ -191,7 +218,7 @@ const FeaturedMatch = ({ match, detail, variant }) => {
           </div>
         )}
         {!isLive && m.result && (
-          <p className="mt-3 border-t card-border pt-3 text-[13.5px] font-semibold text-emerald-700 dark:text-emerald-400">
+          <p className="heading-gradient mt-3 border-t card-border pt-3.5 font-condensed italic font-bold uppercase tracking-wide text-[24px] leading-tight">
             {m.result}
           </p>
         )}
@@ -232,15 +259,15 @@ export const FeaturedMatchMock = () => {
   const thisOver = ["1", "4", "•", "6", "1", "W"];
   const row = (name, score, wkts, overs, batting) => (
     <div
-      className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl ${
+      className={`flex items-center justify-between gap-3 px-3 py-3 rounded-2xl ${
         batting
-          ? "bg-emerald-500/[0.07] ring-1 ring-emerald-500/15"
+          ? "bg-emerald-500/[0.07] ring-1 ring-emerald-500/20"
           : ""
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <TeamChip name={name} size="lg" />
-        <span className="font-condensed font-semibold text-[22px] tracking-wide text-heading truncate">
+        <TeamChip name={name} size="xl" />
+        <span className="font-condensed font-bold uppercase text-[26px] leading-none tracking-wide text-heading truncate">
           {name}
         </span>
         {batting && (
@@ -248,11 +275,11 @@ export const FeaturedMatchMock = () => {
         )}
       </div>
       <div className="text-right shrink-0">
-        <span className="font-condensed font-bold text-[34px] leading-none tabular-nums text-heading">
+        <span className="font-display font-black text-[42px] sm:text-[50px] leading-none tabular-nums text-heading">
           {score}
-          <span className="text-subheading">/{wkts}</span>
+          <span className="text-subheading font-extrabold">/{wkts}</span>
         </span>
-        <span className="block text-[12px] font-semibold text-subheading tabular-nums mt-0.5">
+        <span className="block text-[12px] font-bold text-subheading tabular-nums mt-1">
           {overs} overs
         </span>
       </div>
@@ -260,17 +287,14 @@ export const FeaturedMatchMock = () => {
   );
 
   return (
-    <div className="surface-card overflow-hidden relative">
-      <div className="flex h-1.5" aria-hidden="true">
-        <div
-          className="flex-1"
-          style={{ backgroundColor: teamColorHex("Morang Kings") }}
-        />
-        <div
-          className="flex-1"
-          style={{ backgroundColor: teamColorHex("Jhapa Rhinos") }}
-        />
-      </div>
+    <div className="surface-card overflow-hidden relative live-glow">
+      <div
+        className="h-1.5"
+        aria-hidden="true"
+        style={{
+          backgroundImage: `linear-gradient(90deg, ${teamColorHex("Morang Kings")} 0%, ${teamColorHex("Morang Kings")} 42%, ${teamColorHex("Jhapa Rhinos")} 58%, ${teamColorHex("Jhapa Rhinos")} 100%)`,
+        }}
+      />
       <div className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -291,8 +315,19 @@ export const FeaturedMatchMock = () => {
           {row("Jhapa Rhinos", 148, 4, "16.2/20", true)}
         </div>
 
+        <div className="mt-3.5 px-1">
+          <div className="progress-track" aria-hidden="true">
+            <div className="progress-fill" style={{ width: "82%" }} />
+          </div>
+          <p className="mt-1.5 text-[11px] font-bold uppercase tracking-wider text-secondary tabular-nums">
+            Over 16.2 of 20 · 82% bowled
+          </p>
+        </div>
+
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t card-border pt-3 text-[13px] font-semibold text-subheading tabular-nums">
-          <span className="text-heading">Need 39 off 22 balls</span>
+          <span className="font-bold text-emerald-700 dark:text-lime-300">
+            Need 39 off 22 balls
+          </span>
           <span>
             CRR <span className="text-heading font-space">9.06</span>
           </span>

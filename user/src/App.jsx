@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { Navigate, Routes, Route, useParams } from "react-router-dom";
 import Home from "./pages/Home";
 import NavBar from "./components/NavBar";
+import BottomNav from "./components/BottomNav";
 import Footer from "./components/Footer";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Spinner } from "./components/States";
@@ -65,6 +66,7 @@ function App() {
         </ErrorBoundary>
       </main>
       <Footer />
+      <BottomNav />
     </>
   );
 }

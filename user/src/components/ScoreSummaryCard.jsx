@@ -30,19 +30,34 @@ const LiveCard = ({ data }) => {
 
   const currentInn =
     data?.inning_in_progress === 2 ? teamBinn || teamAinn : teamAinn;
-  const thisOver = inningsView(currentInn, null)?.thisOver || [];
+  const currentView = inningsView(currentInn, null);
+  const thisOver = currentView?.thisOver || [];
   const battingName =
     data?.inning_in_progress === 2 ? data?.teamB : data?.teamA;
+  const progressPct =
+    format && currentView
+      ? Math.min(
+          100,
+          Math.round((currentView.legalBalls / (format * 6)) * 100)
+        )
+      : null;
 
   const teamRow = (name, inn) => (
-    <div className="flex justify-between items-center gap-3">
+    <div
+      className={`flex justify-between items-center gap-3 rounded-xl px-2 py-1.5 -mx-2 ${
+        name === battingName ? "bg-emerald-500/[0.06]" : ""
+      }`}
+    >
       <div className="flex items-center gap-2.5 min-w-0">
         <TeamChip name={name} size="md" />
-        <span className="text-heading font-semibold text-[16px] truncate">
+        <span className="text-heading font-condensed font-bold uppercase tracking-wide text-[19px] truncate">
           {name}
         </span>
+        {name === battingName && (
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+        )}
       </div>
-      <div className="font-condensed font-bold text-[26px] leading-none text-heading shrink-0">
+      <div className="font-display font-extrabold text-[28px] leading-none text-heading shrink-0">
         {scoreLine(inn)}
       </div>
     </div>
@@ -51,23 +66,20 @@ const LiveCard = ({ data }) => {
   return (
     <Link
       to={data?._id ? `/match/${data._id}` : "#"}
-      className="surface-card card-link block group w-full md:w-[340px] overflow-hidden"
+      className="surface-card card-link live-glow block group w-full md:w-[340px] overflow-hidden"
       style={{
         borderLeftWidth: 3,
         borderLeftColor: teamColorHex(battingName),
       }}
     >
-      {/* team colour bar */}
-      <div className="flex h-1" aria-hidden="true">
-        <div
-          className="flex-1"
-          style={{ backgroundColor: teamColorHex(data?.teamA) }}
-        />
-        <div
-          className="flex-1"
-          style={{ backgroundColor: teamColorHex(data?.teamB) }}
-        />
-      </div>
+      {/* team colour bar — the two colours meet mid-card */}
+      <div
+        className="h-1"
+        aria-hidden="true"
+        style={{
+          backgroundImage: `linear-gradient(90deg, ${teamColorHex(data?.teamA)} 0%, ${teamColorHex(data?.teamA)} 42%, ${teamColorHex(data?.teamB)} 58%, ${teamColorHex(data?.teamB)} 100%)`,
+        }}
+      />
 
       <div className="p-4 flex flex-col gap-3.5">
         {/* header */}
@@ -81,17 +93,33 @@ const LiveCard = ({ data }) => {
               <span className="truncate">{data?.venue}</span>
             </p>
           </div>
-          <span className="live-badge shrink-0 pt-0.5">
+          <span className="live-badge shrink-0">
             <LiveDot />
             LIVE
           </span>
         </div>
 
         {/* teams + scores */}
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           {teamRow(data?.teamA, teamAinn)}
           {teamRow(data?.teamB, teamBinn)}
         </div>
+
+        {/* innings progress */}
+        {progressPct !== null && (
+          <div>
+            <div
+              className="progress-track"
+              role="img"
+              aria-label={`Innings progress: ${progressPct} percent of overs bowled`}
+            >
+              <div
+                className="progress-fill"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* this over */}
         {thisOver.length > 0 && (

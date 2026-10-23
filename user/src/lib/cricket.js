@@ -220,12 +220,17 @@ export function eventCommentary(ev) {
   return `${bowler} to ${batsman}, ${eventSummary(ev)}`;
 }
 
-/** Tailwind classes for a ball symbol chip (this-over strip / timeline). */
+/** Tailwind classes for a ball symbol chip (this-over strip / timeline).
+ *  Boundaries carry the show: 4 = emerald glow, 6 = lime floodlight,
+ *  W = rose glow — all legible at ball-pad size. */
 export function ballChipClass(symbol) {
   const s = String(symbol ?? "").trim();
-  if (s === "W" || s.endsWith("W")) return "bg-rose-600 text-white border-rose-600";
-  if (s === "6") return "bg-violet-600 text-white border-violet-600";
-  if (s === "4") return "bg-emerald-600 text-white border-emerald-600";
+  if (s === "W" || s.endsWith("W"))
+    return "bg-rose-600 text-white border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.5)]";
+  if (s === "6")
+    return "bg-lime-400 text-slate-950 border-lime-200 font-black shadow-[0_0_12px_rgba(163,230,53,0.55)]";
+  if (s === "4")
+    return "bg-emerald-500 text-white border-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.5)]";
   if (/wd/i.test(s)) return "bg-amber-500 text-white border-amber-500";
   if (/nb/i.test(s)) return "bg-amber-600 text-white border-amber-600";
   if (s === "•" || s === "0") return "bg-secondary text-subheading border-secondary";
@@ -293,6 +298,18 @@ const TEAM_COLOR_HEX = [
 /** Deterministic team colour as a hex value (charts, meters). */
 export function teamColorHex(name) {
   return TEAM_COLOR_HEX[teamColorIndex(name)];
+}
+
+/** Lighten (positive pct) or darken (negative pct) a #rrggbb hex. */
+export function shadeHex(hex, pct) {
+  const n = String(hex || "").replace("#", "");
+  if (n.length !== 6) return hex;
+  const num = parseInt(n, 16);
+  const amt = Math.round(2.55 * pct);
+  const r = Math.min(255, Math.max(0, (num >> 16) + amt));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amt));
+  const b = Math.min(255, Math.max(0, (num & 0xff) + amt));
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 
 /** Ball symbol for one event — mirrors the backend engine's ballSymbol(). */

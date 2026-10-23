@@ -56,6 +56,10 @@ const NavBar = () => {
         scrolled ? "shadow-[0_10px_36px_-16px_rgba(0,0,0,0.45)]" : ""
       }`}
     >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent"
+      />
       <div className="flex flex-row justify-between items-center h-16 px-4 md:px-10 max-w-[1440px] mx-auto w-full">
         {logo}
 

@@ -27,9 +27,9 @@ const LiveTicker = ({ matches }) => {
   return (
     <div className="w-full border-b card-border bg-card/70">
       <div className="max-w-[1440px] mx-auto flex items-stretch">
-        <div className="hidden sm:flex items-center gap-2 pl-4 md:pl-10 pr-3 py-2 shrink-0 border-r card-border">
-          <LiveDot />
-          <span className="text-[11px] font-black tracking-[0.18em] text-rose-500">
+        <div className="hidden sm:flex items-center pl-4 md:pl-10 pr-3 py-2 shrink-0 border-r card-border">
+          <span className="live-badge">
+            <LiveDot />
             IN PLAY
           </span>
         </div>
@@ -41,7 +41,7 @@ const LiveTicker = ({ matches }) => {
                 <Link
                   key={m._id}
                   to={`/match/${m._id}`}
-                  className="flex items-center gap-2.5 rounded-full bg-secondary/60 hover:bg-secondary ring-1 ring-black/5 dark:ring-white/10 pl-2 pr-3.5 py-2 transition-colors whitespace-nowrap"
+                  className="flex items-center gap-2.5 rounded-full bg-card/80 hover:bg-secondary ring-1 ring-black/5 dark:ring-white/10 shadow-sm pl-2 pr-3.5 py-2 transition-colors whitespace-nowrap"
                 >
                   <LiveDot />
                   <span className="font-condensed font-semibold text-[15px] tracking-wide text-heading">

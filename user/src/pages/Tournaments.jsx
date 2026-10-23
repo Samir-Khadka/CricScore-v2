@@ -37,7 +37,7 @@ const Tournaments = () => {
             aria-hidden="true"
             className="h-8 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-lime-500 shrink-0"
           />
-          <h1 className="font-condensed font-semibold uppercase tracking-wide text-4xl leading-none text-heading flex items-center">
+          <h1 className="font-condensed font-extrabold uppercase tracking-wide text-4xl leading-none text-heading flex items-center">
             <Trophy size={26} className="mr-3 text-emerald-500" aria-hidden="true" />
             Tournaments
           </h1>

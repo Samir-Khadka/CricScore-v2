@@ -1,4 +1,4 @@
-import { fmt2 } from "../lib/cricket";
+import { fmt2, teamColorHex } from "../lib/cricket";
 import TeamChip from "./TeamChip";
 
 /**
@@ -13,7 +13,9 @@ const Scorecard = ({ teamName, view }) => {
         <div className="flex justify-center">
           <TeamChip name={teamName} size="lg" />
         </div>
-        <p className="text-xl text-heading font-bold mt-3">{teamName}</p>
+        <p className="font-condensed font-bold uppercase tracking-wide text-[26px] text-heading mt-3">
+          {teamName}
+        </p>
         <p className="text-subheading mt-1.5">Yet to bat</p>
       </div>
     );
@@ -24,17 +26,23 @@ const Scorecard = ({ teamName, view }) => {
 
   return (
     <div className="w-full surface-card overflow-hidden">
-      {/* heading */}
-      <div className="w-full px-5 py-4 flex items-center justify-between gap-3 border-b card-border">
+      {/* heading — team-colour gradient band */}
+      <div
+        className="w-full px-5 py-4 flex items-center justify-between gap-3 border-b card-border"
+        style={{
+          backgroundImage: `linear-gradient(92deg, ${teamColorHex(teamName)}30, ${teamColorHex(teamName)}0d 55%, transparent)`,
+        }}
+      >
         <span className="flex items-center gap-3 min-w-0">
-          <TeamChip name={teamName} size="md" />
-          <span className="text-xl text-heading font-bold truncate">
+          <TeamChip name={teamName} size="lg" />
+          <span className="font-condensed font-bold uppercase tracking-wide text-[24px] leading-none text-heading truncate">
             {teamName}
           </span>
         </span>
-        <span className="font-space font-bold text-xl text-heading tabular-nums shrink-0">
-          {view.runs}/{view.wickets}{" "}
-          <span className="text-sm text-subheading font-semibold">
+        <span className="font-display font-black text-[26px] leading-none text-heading tabular-nums shrink-0">
+          {view.runs}
+          <span className="text-subheading font-extrabold">/{view.wickets}</span>{" "}
+          <span className="text-sm text-subheading font-bold font-inter">
             ({view.oversText})
           </span>
         </span>
@@ -67,7 +75,9 @@ const Scorecard = ({ teamName, view }) => {
               return (
                 <tr
                   key={s.id || i}
-                  className={`row-hover transition-colors ${s.batting ? "font-medium" : ""}`}
+                  className={`row-hover transition-colors ${s.batting ? "font-medium" : ""} ${
+                    isStriker ? "bg-emerald-500/[0.06]" : ""
+                  }`}
                 >
                   <td className="px-6 py-3 border-b card-border text-heading">
                     {s.name}
@@ -109,9 +119,9 @@ const Scorecard = ({ teamName, view }) => {
               <td colSpan={2} className="px-6 py-2">
                 Total
               </td>
-              <td colSpan={5} className="text-heading">
+              <td colSpan={5} className="text-heading font-display font-extrabold">
                 {view.runs}/{view.wickets}{" "}
-                <span className="text-sm">({view.oversText} overs)</span>
+                <span className="text-sm font-inter font-semibold">({view.oversText} overs)</span>
               </td>
             </tr>
           </tbody>
@@ -121,7 +131,9 @@ const Scorecard = ({ teamName, view }) => {
       {/* fall of wickets  */}
       {fallOfWickets.length > 0 && (
         <div className="px-6 py-4 border-b card-border">
-          <p className="text-heading font-bold mb-2">Fall of Wickets</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-secondary mb-2">
+            Fall of Wickets
+          </p>
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-subheading">
             {fallOfWickets.map((f) => (
               <span key={f.wicket}>

@@ -391,15 +391,16 @@ const Match = () => {
   const teamScore = (view) =>
     view ? (
       <>
-        <p className="font-bold font-space text-4xl text-heading mt-3 md:mt-0">
+        <p className="font-display font-black text-[44px] md:text-[54px] leading-none text-heading mt-3 md:mt-0">
           <span
             key={`${view.runs}/${view.wickets}`}
             className="inline-block animate-score-pop tabular-nums"
           >
-            {view.runs}/{view.wickets}
+            {view.runs}
+            <span className="text-subheading font-extrabold">/{view.wickets}</span>
           </span>
         </p>
-        <p className="text-subheading text-xs text-center font-semibold font-inter mt-2 tabular-nums">
+        <p className="text-subheading text-xs text-center font-bold font-inter mt-1.5 tabular-nums">
           ({view.oversText}
           {format ? `/${format}` : ""} ov)
         </p>
@@ -416,49 +417,70 @@ const Match = () => {
           {match?.teamA} vs {match?.teamB} — live score & scorecard
         </h1>
         <div className="glass surface-card p-4 shadow-xl">
+        {/* team colour strip */}
+        <div className="flex h-1 rounded-full overflow-hidden mb-3.5" aria-hidden="true">
+          <div
+            className="flex-1"
+            style={{
+              backgroundImage: `linear-gradient(90deg, ${teamColorHex(match?.teamA)}, ${teamColorHex(match?.teamA)}cc)`,
+            }}
+          />
+          <div
+            className="flex-1"
+            style={{
+              backgroundImage: `linear-gradient(90deg, ${teamColorHex(match?.teamB)}cc, ${teamColorHex(match?.teamB)})`,
+            }}
+          />
+        </div>
         <div className="flex flex-row justify-between flex-wrap gap-2">
           <div
-            className={`${
-              isLive ? "text-rose-500" : "text-emerald-500"
-            } font-bold px-2 rounded-xl flex flex-row items-center gap-2 uppercase text-sm`}
+            className="flex flex-row items-center gap-2"
             aria-live="polite"
           >
-            {isLive && <LiveDot />}
-            {match?.matchState}
+            {isLive ? (
+              <span className="live-badge">
+                <LiveDot />
+                LIVE
+              </span>
+            ) : (
+              <span className="text-emerald-500 font-bold px-1 uppercase text-sm">
+                {match?.matchState}
+              </span>
+            )}
             {isLive && !connected && (
-              <span className="text-amber-500 normal-case font-semibold text-xs">
+              <span className="text-amber-500 font-semibold text-xs">
                 Reconnecting…
               </span>
             )}
           </div>
-          <p className="font-semibold font-space capitalize text-subheading">
+          <p className="font-condensed font-semibold uppercase tracking-wider text-[17px] text-subheading">
             {match?.tournament_name}
           </p>
         </div>
 
         {/* scores */}
         <div className="flex flex-col md:flex-row justify-evenly items-center flex-wrap py-4">
-          <div className="flex flex-col md:flex-row items-center md:gap-16">
+          <div className="flex flex-col md:flex-row items-center md:gap-10">
             <div className="flex items-center gap-3">
-              <TeamChip name={match?.teamA} size="lg" />
-              <p className="text-heading font-bold text-2xl md:text-3xl">
+              <TeamChip name={match?.teamA} size="xl" />
+              <p className="text-heading font-condensed font-bold uppercase tracking-wide text-[26px] md:text-[32px] leading-none">
                 {match?.teamA}
               </p>
             </div>
             <div className="text-center">{teamScore(teamAView)}</div>
           </div>
 
-          <p className="text-secondary my-3 md:my-0">
-            <Zap size={30} strokeWidth={1} />
-          </p>
+          <span className="my-3 md:my-0 h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-lime-400 ring-2 ring-lime-300/40 shadow-[0_0_18px_rgba(163,230,53,0.35)] grid place-items-center shrink-0">
+            <Zap size={17} strokeWidth={2.25} className="text-emerald-950" />
+          </span>
 
-          <div className="flex flex-col md:flex-row items-center md:gap-16">
+          <div className="flex flex-col md:flex-row items-center md:gap-10">
             <div className="text-center">{teamScore(teamBView)}</div>
             <div className="flex items-center gap-3">
-              <p className="text-heading font-bold text-2xl md:text-3xl">
+              <p className="text-heading font-condensed font-bold uppercase tracking-wide text-[26px] md:text-[32px] leading-none">
                 {match?.teamB}
               </p>
-              <TeamChip name={match?.teamB} size="lg" />
+              <TeamChip name={match?.teamB} size="xl" />
             </div>
           </div>
         </div>
@@ -497,9 +519,13 @@ const Match = () => {
         {/* result banner */}
         {isCompleted && match?.result && (
           <div className="w-full flex justify-center mt-2">
-            <div className="text-heading bg-emerald-500/15 ring-1 ring-emerald-500/25 dark:text-emerald-400 font-medium text-lg rounded-xl px-4 py-3 text-center">
-              <Trophy className="inline" size={18} strokeWidth={2.5} /> &nbsp;
-              <span>{match.result}</span>
+            <div className="flex items-center gap-3 rounded-2xl bg-emerald-500/10 ring-1 ring-emerald-500/25 px-5 py-3.5">
+              <span className="grid place-items-center h-9 w-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-[0_0_16px_rgba(245,158,11,0.45)] shrink-0">
+                <Trophy size={17} strokeWidth={2.25} />
+              </span>
+              <span className="heading-gradient font-condensed italic font-bold uppercase tracking-wide text-[24px] leading-tight text-center">
+                {match.result}
+              </span>
             </div>
           </div>
         )}
@@ -662,7 +688,7 @@ const Match = () => {
       <div className="w-full max-w-5xl mt-4 p-4 md:p-6 rounded-xl">
         {selectedTab === "com" ? (
           <div>
-            <div className="text-2xl text-heading font-space font-semibold px-2">
+            <div className="text-[28px] leading-none text-heading font-condensed font-bold uppercase tracking-wide px-2">
               <MessageCircle size={20} className="inline-block mr-2 text-emerald-500" />
               <span>Live Commentary</span>
             </div>
@@ -733,7 +759,7 @@ const Match = () => {
           </div>
         ) : selectedTab === "sc" ? (
           <div>
-            <div className="text-2xl text-heading font-space font-semibold px-2">
+            <div className="text-[28px] leading-none text-heading font-condensed font-bold uppercase tracking-wide px-2">
               <Clipboard size={20} className="inline-block mr-2 text-emerald-500" />
               <span>Scorecard</span>
             </div>
@@ -771,7 +797,7 @@ const Match = () => {
           </div>
         ) : selectedTab === "overs" ? (
           <div>
-            <div className="text-2xl text-heading font-space font-semibold px-2">
+            <div className="text-[28px] leading-none text-heading font-condensed font-bold uppercase tracking-wide px-2">
               <BarChart3 size={20} className="inline-block mr-2 text-emerald-500" />
               <span>Overs</span>
             </div>
@@ -796,7 +822,7 @@ const Match = () => {
           </div>
         ) : (
           <div>
-            <div className="text-2xl text-heading font-space font-semibold px-2">
+            <div className="text-[28px] leading-none text-heading font-condensed font-bold uppercase tracking-wide px-2">
               <Award size={20} className="inline-block mr-2 text-emerald-500" />
               <span>Match Details</span>
             </div>

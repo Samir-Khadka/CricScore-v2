@@ -30,7 +30,7 @@ function SectionHeader({ icon, title, subtitle, onViewAll, count }) {
             aria-hidden="true"
             className="h-6 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-lime-500 shrink-0"
           />
-          <h2 className="font-condensed font-semibold uppercase tracking-wide text-[26px] leading-none text-heading flex items-center">
+          <h2 className="font-condensed font-bold uppercase tracking-wide text-[28px] leading-none text-heading flex items-center">
             {icon}
             {title}
           </h2>
