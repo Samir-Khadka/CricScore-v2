@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Radio, Trophy, Users } from "lucide-react";
 
 const STEPS = [
@@ -58,4 +59,4 @@ const HowItWorks = () => {
   );
 };
 
-export default HowItWorks;
+export default memo(HowItWorks);

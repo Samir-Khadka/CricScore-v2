@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ballChipClass } from "../lib/cricket";
 
 const TimelineItem = ({ result }) => {
@@ -12,4 +13,4 @@ const TimelineItem = ({ result }) => {
   );
 };
 
-export default TimelineItem;
+export default memo(TimelineItem);

@@ -245,7 +245,7 @@ function SquadSheet({ tourId, team, squad, onSaved }) {
       {/* ------------------------------- header ------------------------------- */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-space font-bold text-heading flex items-center gap-2">
-          <Users size={17} className="text-[#10b981]" />
+          <Users size={17} className="text-emerald-500" />
           {team.teamName}
         </p>
         <span
@@ -264,7 +264,7 @@ function SquadSheet({ tourId, team, squad, onSaved }) {
         <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-subheading mt-2">
           {captainName && (
             <span className="inline-flex items-center gap-1.5">
-              <Crown size={13} className="text-[#10b981]" /> Captain:{" "}
+              <Crown size={13} className="text-emerald-500" /> Captain:{" "}
               {captainName}
             </span>
           )}
@@ -361,7 +361,7 @@ function SquadSheet({ tourId, team, squad, onSaved }) {
                   onClick={() => toggleCaptain(i)}
                   className={`h-9 w-9 rounded-full border-2 font-condensed text-base font-bold flex items-center justify-center cursor-pointer ${
                     row.isCaptain
-                      ? "bg-gradient-to-r from-[#10b981] to-[#a3e635] text-black border-transparent"
+                      ? "bg-gradient-to-r from-emerald-500 to-lime-400 text-black border-transparent"
                       : "border-secondary text-secondary hover:text-subheading"
                   }`}
                 >
@@ -440,7 +440,7 @@ function SquadSheet({ tourId, team, squad, onSaved }) {
             type="button"
             onClick={applyPaste}
             disabled={!pasteText.trim()}
-            className="min-h-10 px-4 rounded-xl border-2 border-[#10b981] text-[#10b981] text-sm font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-h-10 px-4 rounded-xl border-2 border-emerald-500 text-emerald-500 text-sm font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Fill rows
           </button>

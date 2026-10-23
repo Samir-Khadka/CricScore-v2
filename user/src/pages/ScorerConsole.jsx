@@ -15,6 +15,12 @@ import {
   matchFormat,
   squadPlayers,
 } from "../lib/cricket";
+import {
+  batsmanDisabledIds,
+  bowlerDisabledIds,
+  outBatsmanIds,
+  pickCreaseSelection,
+} from "../lib/scorer";
 
 const ZERO_EXTRAS = { wide: 0, noBall: 0, bye: 0, legBye: 0, penalty: 0 };
 
@@ -215,21 +221,12 @@ const ScorerConsole = () => {
     const battingIds = new Set(battingSquad.map((p) => String(p._id)));
     const fieldingIds = new Set(fieldingSquad.map((p) => String(p._id)));
     // A dismissed batsman can never be at the crease. Without this, the
-    // pick() fallback below resurrects the out player (he is still in
-    // the squad list) and the new-batsman picker never opens.
-    const outIds = new Set(
-      (cur.state?.batsmen || [])
-        .filter((b) => b.status === "out")
-        .map((b) => String(b.id ?? b.batsmanId))
-    );
-    const pick = (engineId, prev) => {
-      if (engineId && outIds.has(String(engineId))) engineId = null;
-      if (engineId && battingIds.size === 0) return String(engineId);
-      if (engineId && battingIds.has(String(engineId))) return String(engineId);
-      if (prev && outIds.has(prev)) return null;
-      if (prev && (battingIds.size === 0 || battingIds.has(prev))) return prev;
-      return engineId ? String(engineId) : null;
-    };
+    // pick fallback resurrects the out player (he is still in the squad
+    // list) and the new-batsman picker never opens. The rule itself is
+    // the pure pickCreaseSelection in lib/scorer.
+    const outIds = outBatsmanIds(cur.state?.batsmen);
+    const pick = (engineId, prev) =>
+      pickCreaseSelection(engineId, prev, battingIds, outIds);
     setStriker((prev) => pick(cur.state?.striker ?? cur.inning?.striker, prev));
     setNonStriker((prev) =>
       pick(cur.state?.nonStriker ?? cur.inning?.non_striker, prev)
@@ -409,32 +406,9 @@ const ScorerConsole = () => {
     view?.runsNeeded ??
     (view?.target ? Math.max(0, view.target - view.runs) : null);
 
-  const outIds = new Set(
-    (view?.batsmen || [])
-      .filter((b) => b.status === "out")
-      .map((b) => String(b.id))
-  );
-  const retiredIds = new Set(
-    (view?.batsmen || [])
-      .filter((b) => b.status === "retired hurt")
-      .map((b) => String(b.id))
-  );
-  const batsmanDisabled = (otherId, excludeRetired) => {
-    const s = new Set(outIds);
-    if (excludeRetired) retiredIds.forEach((id) => s.add(id));
-    if (otherId) s.add(String(otherId));
-    return s;
-  };
-  const bowlerDisabled = () => {
-    const s = new Set();
-    if (overStart) {
-      if (lastOverBowler) s.add(lastOverBowler);
-      (view?.bowlers || []).forEach((b) => {
-        if (b.balls >= maxBowlerBalls) s.add(String(b.id));
-      });
-    }
-    return s;
-  };
+  // Picker availability rules are the pure helpers in lib/scorer.
+  const batsmanDisabled = (otherId, excludeRetired) =>
+    batsmanDisabledIds(view?.batsmen, otherId, excludeRetired);
 
   const creaseRow = (label, id, figures, onTap, disabled) => (
     <button
@@ -505,7 +479,7 @@ const ScorerConsole = () => {
             }}
             className={`min-h-11 rounded-xl font-bold cursor-pointer text-sm transition-[background-color,color,box-shadow] duration-200 ${
               inningNumber === n
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+                ? "bg-emerald-700 text-white shadow-md shadow-emerald-700/30"
                 : "text-subheading hover:text-heading"
             }`}
           >
@@ -698,7 +672,11 @@ const ScorerConsole = () => {
         subtitle={`${fieldingTeamName} · max ${Math.ceil(format / 5)} overs per bowler`}
         players={fieldingSquad}
         selected={bowler}
-        disabledIds={bowlerDisabled()}
+        disabledIds={bowlerDisabledIds(view?.bowlers, {
+          overStart,
+          lastOverBowlerId: lastOverBowler,
+          maxBalls: maxBowlerBalls,
+        })}
         disabledReason={
           overStart
             ? "Bowled the last over or reached the over limit"

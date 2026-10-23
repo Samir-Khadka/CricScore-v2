@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { BarChart3, TableProperties, Tally5, TrendingUp } from "lucide-react";
 import WinMeter from "./WinMeter";
 import TeamChip from "./TeamChip";
@@ -259,4 +260,4 @@ const Features = () => {
   );
 };
 
-export default Features;
+export default memo(Features);

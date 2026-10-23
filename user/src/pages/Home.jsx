@@ -272,7 +272,7 @@ const Home = () => {
         </div>
 
         {/* features */}
-        <div className="mt-16">
+        <div className="mt-16 cv-auto">
           <SectionHeader
             icon={
               <BarChart3 size={19} className="mr-2 text-emerald-500 align-middle" />
@@ -284,7 +284,7 @@ const Home = () => {
         </div>
 
         {/* how it works */}
-        <div className="mt-16">
+        <div className="mt-16 cv-auto">
           <SectionHeader
             icon={
               <Sparkles size={19} className="mr-2 text-lime-500 align-middle" />
@@ -322,7 +322,7 @@ const Home = () => {
         <div className="mt-16">
           <SectionHeader
             icon={
-              <Trophy size={19} className="mr-2 text-[#10b981] align-middle" />
+              <Trophy size={19} className="mr-2 text-emerald-500 align-middle" />
             }
             title="Tournaments"
             subtitle="Follow your favourite."

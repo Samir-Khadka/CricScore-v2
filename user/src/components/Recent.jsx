@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { findInnings, matchFormat, teamColorHex } from "../lib/cricket";
 import { fmtDate } from "../lib/formStyles";
 import TeamChip from "./TeamChip";
+import { matchPrefetchProps } from "../lib/preload";
 
 const Recent = ({ data }) => {
   const teamAInning = findInnings(data, data?.teamA_id);
@@ -61,6 +62,7 @@ const Recent = ({ data }) => {
 
   return (
     <Link
+      {...matchPrefetchProps(data?._id)}
       to={data?._id ? `/match/${data._id}` : "#"}
       className="surface-card card-link block w-full md:w-[340px] overflow-hidden"
       style={{ borderLeftWidth: 3, borderLeftColor: teamColorHex(winnerName) }}

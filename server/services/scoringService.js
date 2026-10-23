@@ -11,15 +11,10 @@ const Innings = require("../models/Innings");
 const Match = require("../models/Match");
 const Players = require("../models/Players");
 const { computeInningsState, matchResult, describeBall } = require("../engine/scoringEngine");
+const { httpError } = require("./httpError");
 
 const oid = (id) =>
   id && mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null;
-
-function httpError(status, message) {
-  const e = new Error(message);
-  e.status = status;
-  return e;
-}
 
 /**
  * Accept both the modern payload and the legacy CRA scorer payload.

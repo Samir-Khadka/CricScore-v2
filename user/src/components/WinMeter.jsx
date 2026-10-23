@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { shadeHex, teamColorHex } from "../lib/cricket";
 
 /**
@@ -79,4 +80,4 @@ const WinMeter = ({ teamA, teamB, teamAPct }) => {
   );
 };
 
-export default WinMeter;
+export default memo(WinMeter);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   Award,
@@ -21,14 +21,16 @@ import WinMeter from "../components/WinMeter";
 import WormChart from "../components/WormChart";
 import Partnerships from "../components/Partnerships";
 import { ErrorBox, Spinner } from "../components/States";
-import { api, matchSocket, unwrap } from "../lib/api";
+import { api, unwrap } from "../lib/api";
+import { useMatchLiveUpdates } from "../hooks/useMatchLiveUpdates";
 import {
   ballLabels,
   ballSymbol,
+  detailViewModel,
   eventCommentary,
   fmt2,
-  inningsView,
   matchFormat,
+  teamAWinPct,
   teamColorHex,
 } from "../lib/cricket";
 
@@ -134,15 +136,11 @@ const Match = () => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [connected, setConnected] = useState(false);
   const [selectedTab, setSelectedTab] = useState("com");
   const [innIdx, setInnIdx] = useState(0);
-  const fetchingRef = useRef(false);
 
-  const fetchDetail = useCallback(
+  const rawFetchDetail = useCallback(
     async (signal, silent = false) => {
-      if (fetchingRef.current && silent) return;
-      fetchingRef.current = true;
       if (!silent) setLoading(true);
       try {
         const res = await api.get(`/view/matches/${matchId}`, { signal });
@@ -166,11 +164,16 @@ const Match = () => {
         if (err?.name === "AbortError") return;
         if (!silent) setError(err.message);
       } finally {
-        fetchingRef.current = false;
         if (!silent) setLoading(false);
       }
     },
     [matchId]
+  );
+
+  // Socket-driven live refetches (coalesced) + connection state.
+  const { fetchDetail, connected } = useMatchLiveUpdates(
+    matchId,
+    rawFetchDetail
   );
 
   useEffect(() => {
@@ -180,66 +183,14 @@ const Match = () => {
     return () => ctrl.abort();
   }, [fetchDetail]);
 
-  // Live updates: the socket tells us a ball landed. Its payload is the
-  // raw innings snapshots — not the engine-derived state, events and
-  // milestones this page renders — so the detail is still refetched,
-  // but coalesced: a burst of balls collapses into one refetch, and a
-  // refetch already in flight is followed by at most one more.
-  const refetchTimerRef = useRef(null);
-  useEffect(() => {
-    const socket = matchSocket(matchId);
-    const scheduleRefetch = () => {
-      if (refetchTimerRef.current) return;
-      refetchTimerRef.current = setTimeout(() => {
-        refetchTimerRef.current = null;
-        if (fetchingRef.current) {
-          scheduleRefetch();
-          return;
-        }
-        fetchDetail(undefined, true);
-      }, 350);
-    };
-    socket.on("connect", () => setConnected(true));
-    socket.on("disconnect", () => setConnected(false));
-    socket.on("matchLiveUpdate", scheduleRefetch);
-    return () => {
-      if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current);
-      refetchTimerRef.current = null;
-      socket.off("matchLiveUpdate");
-      socket.disconnect();
-    };
-  }, [matchId, fetchDetail]);
-
   const match = detail?.match || null;
-  const inningsList = useMemo(() => detail?.innings || [], [detail]);
-
-  const views = useMemo(
-    () => inningsList.map((d) => inningsView(d?.inning, d?.state)),
-    [inningsList]
-  );
-
-  const teamAView = useMemo(() => {
-    const i = inningsList.findIndex(
-      (d) => String(d?.inning?.batting_team) === String(match?.teamA_id)
-    );
-    return i >= 0 ? views[i] : null;
-  }, [inningsList, views, match]);
-
-  const teamBView = useMemo(() => {
-    const i = inningsList.findIndex(
-      (d) => String(d?.inning?.batting_team) === String(match?.teamB_id)
-    );
-    return i >= 0 ? views[i] : null;
-  }, [inningsList, views, match]);
-
-  const activeIdx = useMemo(() => {
-    const live = inningsList.findIndex(
-      (d) => d?.inning?.status === "inProgress"
-    );
-    return live >= 0 ? live : inningsList.length - 1;
-  }, [inningsList]);
-
-  const activeView = activeIdx >= 0 ? views[activeIdx] : null;
+  const detailModel = useMemo(() => detailViewModel(detail), [detail]);
+  const inningsList = detailModel.entries;
+  const views = detailModel.views;
+  const teamAView = detailModel.viewFor(match?.teamA_id);
+  const teamBView = detailModel.viewFor(match?.teamB_id);
+  const activeIdx = detailModel.activeIndex;
+  const activeView = detailModel.activeView;
   const selected = inningsList[innIdx] || null;
   const selectedView = views[innIdx] || null;
   const format = matchFormat(match);
@@ -270,26 +221,13 @@ const Match = () => {
       }
     : null;
 
-  // Win probability for team A (0–100) for the meter: while live it comes
-  // from the current innings' engine state (only chases carry one); for a
-  // completed match it settles at 100/0 from the recorded winner.
+  // Win probability for team A (0–100) for the meter — the shared rule
+  // in lib/cricket (winner settles 100/0; live chases read the engine).
   const winMeter = useMemo(() => {
     if (!match || inningsList.length === 0) return null;
-    const idx = isLive ? activeIdx : inningsList.length - 1;
-    const d = inningsList[idx];
-    if (!d) return null;
-    const wp = d.state?.winProbability;
-    const battingIsA =
-      String(d.inning?.batting_team) === String(match.teamA_id);
-    let aPct = null;
-    if (isCompleted && match.winner) {
-      aPct = String(match.winner) === String(match.teamA_id) ? 100 : 0;
-    } else if (wp) {
-      aPct = battingIsA ? wp.batting : wp.bowling;
-    }
-    if (aPct === null || aPct === undefined) return null;
-    return { aPct };
-  }, [match, inningsList, activeIdx, isLive, isCompleted]);
+    const aPct = teamAWinPct(match, inningsList);
+    return aPct == null ? null : { aPct };
+  }, [match, inningsList]);
 
   // Worm graph series: cumulative runs after each over, per innings.
   const wormSeries = useMemo(() => {
@@ -731,7 +669,7 @@ const Match = () => {
                 </p>
               ) : (
                 commentaryGroups.map((g) => (
-                  <div key={`over-${g.overIdx}`}>
+                  <div key={`over-${g.overIdx}`} className="cv-auto">
                     <div className="flex items-center gap-3 mt-6 mb-3 first:mt-1 px-1">
                       <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-500/25 rounded-full px-3 py-1 shrink-0">
                         Over {Number(g.overIdx) + 1}

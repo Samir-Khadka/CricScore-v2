@@ -2,7 +2,7 @@
  * Organizer-flow helpers: squads, match state checks and id resolution
  * for the tournament → teams → squads → match → XI journey.
  */
-import { api } from "./api";
+import { api, unwrap } from "./api";
 
 /** The four squad roles, in display order. */
 export const ROLES = ["Batsman", "Bowler", "All-Rounder", "Wicket-Keeper"];
@@ -161,4 +161,39 @@ export function duplicateNames(names) {
     if (!seen.has(key)) seen.set(key, n);
   }
   return dupes;
+}
+
+/* ------------------------- scorer's matches -------------------------- */
+
+/**
+ * Fetch the scorer's own matches (GET /match/:scorerId). The backend
+ * answers 404 when the scorer has none yet — that is an empty list,
+ * not an error. Any other failure is rethrown for the caller to show.
+ */
+export async function fetchScorerMatches(scorerId, { signal } = {}) {
+  try {
+    const res = await api.get(
+      `/match/${scorerId}`,
+      signal ? { signal } : undefined
+    );
+    return unwrap(res) || [];
+  } catch (err) {
+    if (err?.status === 404) return [];
+    throw err;
+  }
+}
+
+/**
+ * The matches of one tournament out of a scorer's match list. Primary
+ * key is the tournament id; matches whose tournament_id is missing
+ * fall back to the tournament name.
+ */
+export function filterTournamentMatches(matches, tournamentId, tournamentName) {
+  const tid = String(tournamentId);
+  return (matches || []).filter((m) => {
+    const mtid = matchTournamentId(m);
+    return mtid
+      ? mtid === tid
+      : tournamentName != null && m.tournament_name === tournamentName;
+  });
 }

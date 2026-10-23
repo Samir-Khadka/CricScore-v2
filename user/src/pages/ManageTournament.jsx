@@ -15,7 +15,12 @@ import SquadSheet from "../components/organizer/SquadSheet";
 import CreateMatchForm from "../components/organizer/CreateMatchForm";
 import { api, getScorerId, unwrap } from "../lib/api";
 import { fmtDate, inputCls, labelCls, primaryBtnCls } from "../lib/formStyles";
-import { fetchSquad, matchHasXI, matchTournamentId } from "../lib/organizer";
+import {
+  fetchScorerMatches,
+  fetchSquad,
+  filterTournamentMatches,
+  matchHasXI,
+} from "../lib/organizer";
 
 /* --------------------------------- page ----------------------------------- */
 
@@ -57,21 +62,10 @@ const ManageTournament = () => {
   );
 
   const loadMatchesOnly = useCallback(async () => {
-    try {
-      const res = await api.get(`/match/${scorerId}`);
-      const list = unwrap(res) || [];
-      setMatches(
-        list.filter((m) => {
-          const tid = matchTournamentId(m);
-          return tid
-            ? tid === String(tournamentId)
-            : tournament && m.tournament_name === tournament.tournament_name;
-        })
-      );
-    } catch (err) {
-      if (err.status !== 404) throw err;
-      setMatches([]);
-    }
+    const list = await fetchScorerMatches(scorerId);
+    setMatches(
+      filterTournamentMatches(list, tournamentId, tournament?.tournament_name)
+    );
   }, [scorerId, tournamentId, tournament]);
 
   const loadAll = useCallback(
@@ -100,21 +94,10 @@ const ManageTournament = () => {
 
         await loadTeamsAndSquads(signal);
 
-        try {
-          const res = await api.get(`/match/${scorerId}`, { signal });
-          const list = unwrap(res) || [];
-          setMatches(
-            list.filter((m) => {
-              const tid = matchTournamentId(m);
-              return tid
-                ? tid === String(tournamentId)
-                : m.tournament_name === tour.tournament_name;
-            })
-          );
-        } catch (err) {
-          if (err.status !== 404) throw err;
-          setMatches([]);
-        }
+        const list = await fetchScorerMatches(scorerId, { signal });
+        setMatches(
+          filterTournamentMatches(list, tournamentId, tour.tournament_name)
+        );
       } catch (err) {
         if (err?.name === "AbortError") return;
         setError(err.message);
@@ -186,7 +169,7 @@ const ManageTournament = () => {
         <>
           {/* ------------------------------ header ------------------------------ */}
           <div className="surface-card p-6 mt-4">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#10b981]">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
               Tournament
             </p>
             <h1 className="font-condensed font-bold uppercase text-4xl md:text-5xl text-heading leading-none mt-2">
@@ -369,7 +352,7 @@ const ManageTournament = () => {
                         {hasXI ? (
                           <Link
                             to={`/score/${m._id}`}
-                            className="px-5 min-h-12 flex items-center gap-2 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635]"
+                            className={primaryBtnCls}
                           >
                             <Play size={16} /> Score
                           </Link>
@@ -383,7 +366,7 @@ const ManageTournament = () => {
                             </Link>
                             <Link
                               to={`/manage/${tournamentId}/match/${m._id}/setup`}
-                              className="px-5 min-h-12 flex items-center gap-2 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635]"
+                              className={primaryBtnCls}
                             >
                               <Settings2 size={16} /> Playing XI &amp; Toss
                             </Link>

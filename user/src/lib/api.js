@@ -65,12 +65,49 @@ async function request(method, path, { body, signal } = {}) {
 }
 
 export const api = {
-  get: (path, opts) => request("GET", path, opts),
+  get: (path, opts) => {
+    // Consume a warmed prefetch (see prefetchGet) instead of refetching.
+    // The caller's AbortSignal is honoured at hand-off: if it has fired
+    // by the time the warmed response lands, the abort wins — the same
+    // contract as a real fetch.
+    const hit = prefetches.get(path);
+    if (hit) {
+      prefetches.delete(path);
+      const signal = opts?.signal;
+      return hit.then(({ ok, data }) => {
+        if (signal?.aborted) throw signal.reason;
+        return ok ? data : request("GET", path, opts);
+      });
+    }
+    return request("GET", path, opts);
+  },
   post: (path, body, opts) => request("POST", path, { ...opts, body }),
   put: (path, body, opts) => request("PUT", path, { ...opts, body }),
   patch: (path, body, opts) => request("PATCH", path, { ...opts, body }),
   del: (path, body, opts) => request("DELETE", path, { ...opts, body }),
 };
+
+/* ------------------------------------------------------------------ */
+/* Intent prefetch cache. Match cards warm their detail GET on hover / */
+/* focus / touch (lib/preload); the next api.get for the same path     */
+/* consumes the warmed response instead of opening a second request.   */
+/* One-shot, 15 s TTL, failures fall back to a real fetch. The warmed  */
+/* promise never rejects, so an unconsumed prefetch stays silent.      */
+/* ------------------------------------------------------------------ */
+const prefetches = new Map();
+const PREFETCH_TTL_MS = 15000;
+
+export function prefetchGet(path) {
+  if (prefetches.has(path)) return;
+  const promise = request("GET", path).then(
+    (data) => ({ ok: true, data }),
+    () => ({ ok: false, data: null })
+  );
+  prefetches.set(path, promise);
+  setTimeout(() => {
+    if (prefetches.get(path) === promise) prefetches.delete(path);
+  }, PREFETCH_TTL_MS);
+}
 
 /** Many endpoints wrap payloads in { data }; some don't. Normalise here. */
 export function unwrap(res, key) {

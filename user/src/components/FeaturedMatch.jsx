@@ -1,16 +1,19 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, MapPin } from "lucide-react";
 import {
+  detailViewModel,
   findInnings,
   fmt2,
   inningsView,
   matchFormat,
+  teamAWinPct,
   teamColorHex,
 } from "../lib/cricket";
 import TeamChip from "./TeamChip";
 import LiveDot from "./LiveDot";
 import TimelineItem from "./TimelineItem";
 import WinMeter from "./WinMeter";
+import { matchPrefetchProps } from "../lib/preload";
 
 /**
  * Hero featured-match panel. Renders from the list payload immediately and
@@ -25,29 +28,17 @@ const FeaturedMatch = ({ match, detail, variant }) => {
   const format = matchFormat(m);
   const isLive = variant === "live";
 
-  // Normalised innings views, from detail states when available.
-  const detailInnings = detail?.innings || [];
+  // Normalised innings views, from detail states when available —
+  // composed by the shared detail view model in lib/cricket.
+  const detailModel = detailViewModel(detail);
   let teamAView = null;
   let teamBView = null;
   let activeView = null;
-  let activeEntry = null;
 
-  if (detailInnings.length > 0) {
-    const views = detailInnings.map((d) => inningsView(d?.inning, d?.state));
-    const byTeam = (id) => {
-      const i = detailInnings.findIndex(
-        (d) => String(d?.inning?.batting_team) === String(id)
-      );
-      return i >= 0 ? views[i] : null;
-    };
-    teamAView = byTeam(m.teamA_id);
-    teamBView = byTeam(m.teamB_id);
-    const liveIdx = detailInnings.findIndex(
-      (d) => d?.inning?.status === "inProgress"
-    );
-    const idx = liveIdx >= 0 ? liveIdx : detailInnings.length - 1;
-    activeEntry = detailInnings[idx];
-    activeView = views[idx];
+  if (detailModel.entries.length > 0) {
+    teamAView = detailModel.viewFor(m.teamA_id);
+    teamBView = detailModel.viewFor(m.teamB_id);
+    activeView = detailModel.activeView;
   } else {
     const aDoc = findInnings(m, m.teamA_id);
     const bDoc = findInnings(m, m.teamB_id);
@@ -59,17 +50,8 @@ const FeaturedMatch = ({ match, detail, variant }) => {
         : teamAView || teamBView;
   }
 
-  // Win probability for team A — mirrors the match page: live chases read
-  // the engine state; a completed match settles at 100/0 from the winner.
-  let winAPct = null;
-  if (!isLive && m.winner) {
-    winAPct = String(m.winner) === String(m.teamA_id) ? 100 : 0;
-  } else if (activeEntry?.state?.winProbability) {
-    const wp = activeEntry.state.winProbability;
-    const battingIsA =
-      String(activeEntry.inning?.batting_team) === String(m.teamA_id);
-    winAPct = battingIsA ? wp.batting : wp.bowling;
-  }
+  // Win probability for team A — the shared rule in lib/cricket.
+  const winAPct = teamAWinPct(m, detailModel.entries);
 
   const battingId = activeView?.battingTeam;
   // Innings progress for the live hero: overs bowled of the allocation.
@@ -123,6 +105,7 @@ const FeaturedMatch = ({ match, detail, variant }) => {
 
   return (
     <Link
+      {...matchPrefetchProps(m._id)}
       to={m._id ? `/match/${m._id}` : "#"}
       className={`surface-card card-link block overflow-hidden group ${
         isLive ? "live-glow" : ""

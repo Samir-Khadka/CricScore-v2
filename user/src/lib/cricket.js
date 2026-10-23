@@ -334,7 +334,70 @@ export function ballSymbol(ev) {
   return String(bat);
 }
 
-/** Extract a squad's player list from the /players endpoint response. */
+/* ------------------- match detail view model ----------------------- */
+
+/** Index of the active innings: the one in progress, else the latest. */
+export function activeInningsIndex(entries) {
+  if (!entries || entries.length === 0) return -1;
+  const liveIdx = entries.findIndex(
+    (d) => d?.inning?.status === "inProgress"
+  );
+  return liveIdx >= 0 ? liveIdx : entries.length - 1;
+}
+
+/**
+ * Compose the view model for a match-detail payload (GET /view/matches/:id
+ * → { match, innings: [{ inning, state, events, milestones }] }).
+ *
+ * One home for the composition every match surface needs — per-innings
+ * views, the view for the team that batted in an innings, and which
+ * innings is "active" (the one in progress, else the latest) — so the
+ * hero panel and the match page can never drift apart on these rules.
+ */
+export function detailViewModel(detail) {
+  const entries = detail?.innings || [];
+  const views = entries.map((d) => inningsView(d?.inning, d?.state));
+  const viewFor = (teamId) => {
+    const i = entries.findIndex(
+      (d) => String(d?.inning?.batting_team) === String(teamId)
+    );
+    return i >= 0 ? views[i] : null;
+  };
+  const activeIndex = activeInningsIndex(entries);
+  return {
+    entries,
+    views,
+    viewFor,
+    activeIndex,
+    activeEntry: activeIndex >= 0 ? entries[activeIndex] : null,
+    activeView: activeIndex >= 0 ? views[activeIndex] : null,
+  };
+}
+
+/**
+ * Win probability (0–100) for team A, or null when no honest figure
+ * exists. A recorded winner settles it at 100/0 (winner is only ever
+ * set on completion, so this is safe for live payloads too); otherwise
+ * the engine's figure for the active innings is used, flipped when
+ * team A is the fielding side (the engine reports batting/bowling).
+ */
+export function teamAWinPct(match, entries) {
+  if (!match) return null;
+  if (match.winner) {
+    return String(match.winner) === String(match.teamA_id) ? 100 : 0;
+  }
+  if (!entries || entries.length === 0) return null;
+  const entry = entries[activeInningsIndex(entries)];
+  const wp = entry?.state?.winProbability;
+  if (!wp) return null;
+  const battingIsA =
+    String(entry?.inning?.batting_team) === String(match.teamA_id);
+  return battingIsA ? wp.batting : wp.bowling;
+}
+
+/**
+ * Extract a squad's player list from the /players endpoint response.
+ */
 export function squadPlayers(res) {
   if (!res) return [];
   const docs = Array.isArray(res) ? res : res.players || res.data?.players || res.data || [];

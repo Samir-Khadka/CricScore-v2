@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import { teamColorHex } from "../lib/cricket";
 import { fmtDate } from "../lib/formStyles";
 import TeamChip from "./TeamChip";
+import { matchPrefetchProps } from "../lib/preload";
 
 const UpcomingCard = ({ data }) => {
   return (
     <Link
+      {...matchPrefetchProps(data?._id)}
       to={data?._id ? `/match/${data._id}` : "#"}
       className="surface-card card-link block w-full md:w-[340px] overflow-hidden"
       style={{

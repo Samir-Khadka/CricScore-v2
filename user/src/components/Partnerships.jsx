@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Users } from "lucide-react";
 
 /**
@@ -72,4 +73,4 @@ const Partnerships = ({ partnerships }) => {
   );
 };
 
-export default Partnerships;
+export default memo(Partnerships);

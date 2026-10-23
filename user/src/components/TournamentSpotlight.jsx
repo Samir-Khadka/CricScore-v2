@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CalendarRange, MapPin, Trophy } from "lucide-react";
 import TeamChip from "./TeamChip";
@@ -234,4 +235,4 @@ const TournamentSpotlight = ({
   );
 };
 
-export default TournamentSpotlight;
+export default memo(TournamentSpotlight);

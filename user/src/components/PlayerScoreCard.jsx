@@ -1,3 +1,4 @@
+import { memo } from "react";
 const PlayerScoreCard = (props) => {
   return (
     <div className="bg-secondary/60 ring-1 ring-black/5 dark:ring-white/10 md:w-[120px] lg:w-[180px] xl:w-[250px] p-3.5 flex flex-col justify-evenly rounded-xl overflow-hidden">
@@ -30,4 +31,4 @@ const PlayerScoreCard = (props) => {
   );
 };
 
-export default PlayerScoreCard;
+export default memo(PlayerScoreCard);

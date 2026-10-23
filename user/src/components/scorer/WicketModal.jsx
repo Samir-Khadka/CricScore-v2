@@ -177,7 +177,7 @@ export default function WicketModal({
                     aria-pressed={active}
                     className={`min-h-11 px-3 rounded-full border-2 text-sm font-semibold cursor-pointer ${
                       active
-                        ? "border-[#10b981] bg-[#10b981]/15 text-heading"
+                        ? "border-emerald-500 bg-emerald-500/15 text-heading"
                         : "border-secondary bg-secondary/40 text-subheading"
                     }`}
                   >

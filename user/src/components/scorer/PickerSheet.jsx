@@ -76,7 +76,7 @@ export default function PickerSheet({
                   isDisabled
                     ? "opacity-40 cursor-not-allowed border-secondary"
                     : isSelected
-                      ? "border-[#10b981] bg-[#10b981]/10 cursor-pointer"
+                      ? "border-emerald-500 bg-emerald-500/10 cursor-pointer"
                       : "border-secondary bg-secondary/40 cursor-pointer"
                 }`}
               >
@@ -91,7 +91,7 @@ export default function PickerSheet({
                       : p.role || ""}
                   </span>
                 </span>
-                {isSelected && <Check className="text-[#10b981]" size={22} />}
+                {isSelected && <Check className="text-emerald-500" size={22} />}
               </button>
             );
           })}
@@ -102,7 +102,7 @@ export default function PickerSheet({
             <button
               type="button"
               onClick={onConfirm}
-              className="w-full min-h-14 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635] cursor-pointer"
+              className="w-full min-h-14 rounded-xl font-bold text-black bg-gradient-to-r from-emerald-500 to-lime-400 cursor-pointer"
             >
               Done
             </button>

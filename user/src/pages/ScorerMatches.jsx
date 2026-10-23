@@ -15,8 +15,16 @@ import { ErrorBox, Spinner } from "../components/States";
 import CreateTournamentForm from "../components/CreateTournamentForm";
 import { SectionHead, StateChip } from "../components/OrgBits";
 import { api, clearScorer, getScorerId, unwrap } from "../lib/api";
-import { fmtDate } from "../lib/formStyles";
-import { matchHasXI, matchTournamentId } from "../lib/organizer";
+import {
+  fmtDate,
+  primaryBtnCls,
+  primaryBtnInlineCls,
+} from "../lib/formStyles";
+import {
+  fetchScorerMatches,
+  matchHasXI,
+  matchTournamentId,
+} from "../lib/organizer";
 
 const ScorerMatches = () => {
   const navigate = useNavigate();
@@ -35,16 +43,11 @@ const ScorerMatches = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await api.get(`/match/${scorerId}`, { signal });
-        setMatches(unwrap(res) || []);
+        // 404 (no matches yet) is normalised to [] by the helper.
+        setMatches(await fetchScorerMatches(scorerId, { signal }));
       } catch (err) {
         if (err?.name === "AbortError") return;
-        // Backend returns 404 when the scorer has no matches yet.
-        if (err.status === 404) {
-          setMatches([]);
-        } else {
-          setError(err.message);
-        }
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -134,7 +137,7 @@ const ScorerMatches = () => {
             <button
               type="button"
               onClick={() => setShowCreate((v) => !v)}
-              className="min-h-11 px-4 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635] cursor-pointer flex items-center gap-2 shrink-0"
+              className={`${primaryBtnCls} shrink-0`}
             >
               <Plus size={16} /> Create Tournament
             </button>
@@ -158,7 +161,7 @@ const ScorerMatches = () => {
           </div>
         ) : tournaments.length === 0 ? (
           <div className="mt-4 surface-card p-8 text-center border-dashed">
-            <Trophy size={28} className="mx-auto text-[#10b981]" />
+            <Trophy size={28} className="mx-auto text-emerald-500" />
             <p className="text-heading font-semibold mt-3">
               No tournaments yet
             </p>
@@ -169,7 +172,7 @@ const ScorerMatches = () => {
             <button
               type="button"
               onClick={openCreate}
-              className="mt-5 min-h-12 px-5 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635] cursor-pointer inline-flex items-center gap-2"
+              className={`mt-5 ${primaryBtnInlineCls}`}
             >
               <Plus size={16} /> Create Tournament
             </button>
@@ -245,7 +248,7 @@ const ScorerMatches = () => {
               <button
                 type="button"
                 onClick={openCreate}
-                className="mt-5 min-h-12 px-5 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635] cursor-pointer inline-flex items-center gap-2"
+                className={`mt-5 ${primaryBtnInlineCls}`}
               >
                 <Plus size={16} /> Create Tournament
               </button>
@@ -313,14 +316,14 @@ const ScorerMatches = () => {
                     {hasXI || !setupPath ? (
                       <Link
                         to={`/score/${m._id}`}
-                        className="px-5 min-h-12 flex items-center gap-2 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635]"
+                        className={primaryBtnCls}
                       >
                         <Play size={16} /> Score
                       </Link>
                     ) : (
                       <Link
                         to={setupPath}
-                        className="px-5 min-h-12 flex items-center gap-2 rounded-xl font-bold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635]"
+                        className={primaryBtnCls}
                       >
                         <Settings2 size={16} /> Set Playing XI &amp; Toss
                       </Link>

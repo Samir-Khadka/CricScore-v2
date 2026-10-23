@@ -1,6 +1,7 @@
 const Innings = require("../models/Innings");
 const Match = require("../models/Match");
 const scoring = require("../services/scoringService");
+const { sendHttpError } = require("../services/httpError");
 
 function emitLive(req, matchId) {
   const io = req.app.get("io");
@@ -34,9 +35,7 @@ async function handleBallByBall(req, res) {
       ...(result.result ? { result: result.result } : {}),
     });
   } catch (error) {
-    return res
-      .status(error.status || 500)
-      .json({ message: error.message || "Internal Server Error" });
+    return sendHttpError(res, error);
   }
 }
 
@@ -55,9 +54,7 @@ async function handleUndoBall(req, res) {
       state: result.state,
     });
   } catch (error) {
-    return res
-      .status(error.status || 500)
-      .json({ message: error.message || "Internal Server Error" });
+    return sendHttpError(res, error);
   }
 }
 
@@ -70,9 +67,7 @@ async function handleGetState(req, res) {
     );
     return res.status(200).json({ message: "Success", data: inning, state, events });
   } catch (error) {
-    return res
-      .status(error.status || 500)
-      .json({ message: error.message || "Internal Server Error" });
+    return sendHttpError(res, error);
   }
 }
 

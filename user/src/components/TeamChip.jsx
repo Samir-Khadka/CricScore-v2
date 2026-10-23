@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { shadeHex, teamColorClass, teamColorHex, teamInitials } from "../lib/cricket";
 
 const SIZES = {
@@ -34,4 +35,4 @@ const TeamChip = ({ name, size = "md" }) => {
   );
 };
 
-export default TeamChip;
+export default memo(TeamChip);

@@ -722,4 +722,11 @@ h3 {
             );
         }
     }
+
+    /* Skip layout/paint for off-screen blocks (below-fold home
+       sections, commentary over-groups) until they near the viewport. */
+    .cv-auto {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 480px;
+    }
 }

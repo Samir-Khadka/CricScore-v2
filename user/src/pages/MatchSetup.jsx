@@ -63,7 +63,7 @@ function TeamPicker({ teamName, players, pick, onToggle, onCaptain }) {
                 checked={isSel}
                 onChange={() => {}}
                 tabIndex={-1}
-                className="h-5 w-5 shrink-0 accent-[#10b981] pointer-events-none"
+                className="h-5 w-5 shrink-0 accent-emerald-500 pointer-events-none"
               />
               <span
                 className={`flex-1 font-semibold flex items-center gap-2 min-w-0 ${
@@ -73,7 +73,7 @@ function TeamPicker({ teamName, players, pick, onToggle, onCaptain }) {
                 <span className="truncate">{name}</span>
                 <RoleChip role={p.role} />
                 {isCap && (
-                  <span className="text-xs font-bold text-[#10b981]">(C)</span>
+                  <span className="text-xs font-bold text-emerald-500">(C)</span>
                 )}
               </span>
               {isSel && (
@@ -86,7 +86,7 @@ function TeamPicker({ teamName, players, pick, onToggle, onCaptain }) {
                   }}
                   className={`shrink-0 min-h-9 px-3 rounded-full text-xs font-bold cursor-pointer border-2 ${
                     isCap
-                      ? "bg-gradient-to-r from-[#10b981] to-[#a3e635] text-black border-transparent"
+                      ? "bg-gradient-to-r from-emerald-500 to-lime-400 text-black border-transparent"
                       : "border-secondary text-subheading"
                   }`}
                 >
@@ -273,7 +273,7 @@ const MatchSetup = () => {
         </div>
       ) : saved ? (
         <div className="surface-card p-8 mt-6 text-center">
-          <CheckCircle2 size={36} className="mx-auto text-[#10b981]" />
+          <CheckCircle2 size={36} className="mx-auto text-emerald-500" />
           <p className="text-2xl font-space font-bold text-heading mt-3">
             Innings created
           </p>
@@ -293,7 +293,7 @@ const MatchSetup = () => {
         </div>
       ) : matchHasXI(match) ? (
         <div className="surface-card p-8 mt-6 text-center">
-          <CheckCircle2 size={36} className="mx-auto text-[#10b981]" />
+          <CheckCircle2 size={36} className="mx-auto text-emerald-500" />
           <p className="text-2xl font-space font-bold text-heading mt-3">
             Playing XI already set
           </p>
@@ -368,7 +368,7 @@ const MatchSetup = () => {
           {/* -------------------------------- toss -------------------------------- */}
           <div className="surface-card p-5 mt-4">
             <p className="font-space font-bold text-heading flex items-center gap-2">
-              <Coins size={17} className="text-[#10b981]" /> Toss
+              <Coins size={17} className="text-emerald-500" /> Toss
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <div>
@@ -386,7 +386,7 @@ const MatchSetup = () => {
                       onClick={() => setTossWinner(t.id)}
                       className={`min-h-12 px-3 rounded-xl border-2 font-semibold cursor-pointer ${
                         tossWinner === t.id
-                          ? "border-[#10b981] text-[#10b981]"
+                          ? "border-emerald-500 text-emerald-500"
                           : "border-secondary text-subheading"
                       }`}
                     >
@@ -410,7 +410,7 @@ const MatchSetup = () => {
                       onClick={() => setDecision(d.v)}
                       className={`min-h-12 px-3 rounded-xl border-2 font-semibold cursor-pointer ${
                         decision === d.v
-                          ? "border-[#10b981] text-[#10b981]"
+                          ? "border-emerald-500 text-emerald-500"
                           : "border-secondary text-subheading"
                       }`}
                     >

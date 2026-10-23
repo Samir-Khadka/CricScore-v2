@@ -30,8 +30,10 @@ export default class ErrorBoundary extends Component {
       return (
         <div className="min-h-[50vh] flex items-center justify-center px-4 py-16">
           <div className="surface-card ring-1 ring-red-500/30 p-8 max-w-md w-full text-center">
-            <AlertTriangle className="mx-auto text-red-500" size={36} />
-            <p className="mt-3 text-xl font-space font-bold text-heading">
+            <span className="mx-auto grid place-items-center h-14 w-14 rounded-2xl bg-red-500/15 ring-1 ring-red-500/30 text-red-500">
+              <AlertTriangle size={26} strokeWidth={2.25} />
+            </span>
+            <p className="mt-4 text-xl font-display font-bold text-heading">
               Something went wrong
             </p>
             <p className="mt-2 text-sm text-subheading">
@@ -46,7 +48,7 @@ export default class ErrorBoundary extends Component {
             <button
               type="button"
               onClick={this.handleReset}
-              className="mt-5 px-5 py-2.5 rounded-xl text-sm font-semibold text-black bg-gradient-to-r from-[#10b981] to-[#a3e635] cursor-pointer"
+              className="btn-primary mt-5"
             >
               Try again
             </button>

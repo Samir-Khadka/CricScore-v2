@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ballChipClass } from "../lib/cricket";
 
 /**
@@ -28,4 +29,4 @@ const Commentary = ({ label, text, symbol }) => {
   );
 };
 
-export default Commentary;
+export default memo(Commentary);

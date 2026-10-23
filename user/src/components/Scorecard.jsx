@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { fmt2, teamColorHex } from "../lib/cricket";
 import TeamChip from "./TeamChip";
 
@@ -206,4 +207,4 @@ const Scorecard = ({ teamName, view }) => {
   );
 };
 
-export default Scorecard;
+export default memo(Scorecard);

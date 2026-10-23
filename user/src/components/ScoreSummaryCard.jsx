@@ -7,6 +7,7 @@ import {
   teamColorHex,
 } from "../lib/cricket";
 import TeamChip from "./TeamChip";
+import { matchPrefetchProps } from "../lib/preload";
 import LiveDot from "./LiveDot";
 import TimelineItem from "./TimelineItem";
 
@@ -65,6 +66,7 @@ const LiveCard = ({ data }) => {
 
   return (
     <Link
+      {...matchPrefetchProps(data?._id)}
       to={data?._id ? `/match/${data._id}` : "#"}
       className="surface-card card-link live-glow block group w-full md:w-[340px] overflow-hidden"
       style={{

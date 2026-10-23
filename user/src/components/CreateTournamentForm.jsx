@@ -180,7 +180,7 @@ export default function CreateTournamentForm({ onCreated }) {
               onClick={() => setFormat(String(p))}
               className={`min-h-11 px-4 rounded-xl border-2 font-semibold cursor-pointer ${
                 String(p) === String(format)
-                  ? "border-[#10b981] text-[#10b981]"
+                  ? "border-emerald-500 text-emerald-500"
                   : "border-secondary text-subheading"
               }`}
             >

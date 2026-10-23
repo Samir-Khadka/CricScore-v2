@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * Worm graph: cumulative runs after each over, one line per innings.
  * Dots on a line mark overs in which wickets fell (stacked when more
@@ -207,4 +208,4 @@ const WormChart = ({ series }) => {
   );
 };
 
-export default WormChart;
+export default memo(WormChart);

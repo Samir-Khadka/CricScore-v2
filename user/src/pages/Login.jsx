@@ -47,10 +47,13 @@ const Login = () => {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md surface-card p-6 md:p-8">
-        <h1 className="text-2xl font-space font-bold text-heading text-center">
-          Scorer {mode === "login" ? "Login" : "Sign Up"}
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 text-center">
+          Scorer Account
+        </p>
+        <h1 className="mt-2 font-condensed font-bold uppercase tracking-wide text-4xl leading-none text-heading text-center">
+          {mode === "login" ? "Welcome back" : "Create account"}
         </h1>
-        <p className="text-sm text-subheading text-center mt-1">
+        <p className="text-sm text-subheading text-center mt-2">
           Score your matches ball by ball, live.
         </p>
 
