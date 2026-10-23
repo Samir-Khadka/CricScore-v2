@@ -59,11 +59,13 @@ function normalizeEvent(body) {
   };
   // Legacy "nb+Nb"/"nb+Nlb" buttons folded byes into the no-ball count:
   // anything above the 1-run penalty is really byes / leg-byes.
+  // Order matters: test /lb$/ BEFORE /b$/ — every "…lb" string also
+  // ends in "b", so the more specific suffix must win.
   const evStr = String(body.event || "");
   if (extras.noBall > 1) {
     const extra = extras.noBall - 1;
-    if (/b$/.test(evStr)) extras.bye += extra;
-    else if (/lb$/.test(evStr)) extras.legBye += extra;
+    if (/lb$/.test(evStr)) extras.legBye += extra;
+    else if (/b$/.test(evStr)) extras.bye += extra;
     extras.noBall = 1;
   }
 

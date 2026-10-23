@@ -77,11 +77,9 @@ test('legacy "nb+2b": byes folded into the no-ball count are split back out', ()
   assert.equal(ev.extras.bye, 2);
 });
 
-test('legacy "nb+3lb" currently folds into byes (pinned quirk)', () => {
-  // The /b$/ branch is tested before /lb$/, and every "…lb" string
-  // also ends in "b" — so the leg-bye branch is unreachable today and
-  // merged leg-byes land in `bye`. Pinned so a future fix is a
-  // deliberate behaviour change, not an accident.
+test('legacy "nb+3lb": leg-byes folded into the no-ball count are split back out as leg-byes', () => {
+  // Fixed 2026-10-23: /lb$/ is now tested before /b$/ (every "…lb"
+  // string also ends in "b", so the bye branch used to swallow these).
   const ev = normalizeEvent({
     striker: "p1",
     non_striker: "p2",
@@ -91,8 +89,8 @@ test('legacy "nb+3lb" currently folds into byes (pinned quirk)', () => {
     event: "nb+3lb",
   });
   assert.equal(ev.extras.noBall, 1);
-  assert.equal(ev.extras.bye, 3);
-  assert.equal(ev.extras.legBye, 0);
+  assert.equal(ev.extras.legBye, 3);
+  assert.equal(ev.extras.bye, 0);
 });
 
 test("legacy run_out_striker: striker is the player out", () => {
